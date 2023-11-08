@@ -4,10 +4,12 @@ const allRoutes = express.Router();
 // Importing all individual routes
 const courseRouter = require('./course.route')
 const userRouter = require("./user.route")
+const educatorRouter = require("./educator.route");
 
 // Using all imported routes through a single route called allRoutes and exporting it to index.js
 allRoutes.use('/skillup/api/v1/course',courseRouter)
 allRoutes.use("/skillup/api/v1/user",userRouter)
+allRoutes.use("/skillup/api/v1/educator", educatorRouter)
 
 // Base API route
 allRoutes.use("skillup/api/v1", (req,res)=>{

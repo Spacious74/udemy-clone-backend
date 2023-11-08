@@ -15,12 +15,23 @@ const educatorSchema = mongoose.Schema({
             required : true,
         }
     },
-    edQualifications : [String],
-    profession : {
+    experience : {
+        type : Number,
+        default : 0
+    },
+    proffession : {
         type : String,
-        required : true,
+    },
+    createdAt : {
+        type : Date,
+        immutable : true,
+        default : ()=> Date.now()
+    },
+    updatedAt : {
+        type : Date,
+        default : ()=> Date.now()
     }
 })
 
-const Educator = mongoose.model(educatorSchema, "Educator");
+const Educator = mongoose.model("Educator",educatorSchema);
 module.exports = Educator

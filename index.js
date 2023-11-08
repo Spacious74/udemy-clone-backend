@@ -1,5 +1,6 @@
 const {app, dbconnection} = require("./connections");
 const PORT = process.env.PORT || 8080;
+const errorMiddleware = require("./middlewares/errorHandler.js");
 // connecting database to Mongo Atlas
 dbconnection();
 
@@ -12,3 +13,6 @@ app.use(allRoutes);
 app.listen(PORT, ()=>{
     console.log("Server is listening on port : " + PORT);
 });
+
+
+app.use(errorMiddleware)
