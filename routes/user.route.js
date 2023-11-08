@@ -3,10 +3,10 @@ const userRouter = express.Router();
 const controller = require("../controllers/user.controller")
 
 // Getting user information by its ID
-userRouter.get('/:id', controller.getUserById);
+userRouter.get('/profile/:id', controller.getUserById);
 
 // Registering the user
-userRouter.post("/", controller.createUser);
+userRouter.post("/register", controller.createUser);
 
 // Delete user
 userRouter.delete('/:id', controller.deleteUser);
