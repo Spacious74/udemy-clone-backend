@@ -15,59 +15,15 @@ const courseSchema = new mongoose.Schema({
         required : [true, "Course description is required"],
         minLength : [8, "Course Description must be at least 8 characters long"],
     },  
-    coursePoster : {
-        public_id :{
-            type : String,
-            required :  true,
-        },
-        url : {
-            type : String,
-            required :  true,
-        },
-    },
-
-    // Lecutures array stores the videos link, posters, length of video.
-    lectures : [
-        {
-            lecuterTitle : {
-                type : String,
-                required : [true, "Lecture title is required"],
-            },
-            lectureLength : {
-                type : String,
-                reqiured : [true, "Lecture length is required"],
-            },
-            video : {
-                public_id :{
-                    type : String,
-                    required :  true,
-                },
-                url : {
-                    type : String,
-                    required :  true,
-                },
-            }
-
-        }
-    ],
-
-    // No. of views of that course
-    views : {
-        type : Number,
-        default : 0
-    },
-
-    // How many lectures are there in this course
-    noOfLecuters : {
-        type : Number,
-        default : 0
-    },
+    
 
     // Which category belong a course
     category : {
         type : String,
         reuqired : [true, "Category is required"]
     },
+
+    price : Number,
 
     // Who is the educator of this course
     educator : {
@@ -80,6 +36,21 @@ const courseSchema = new mongoose.Schema({
             required : true,
         }
     },
+    coursePoster : {
+        public_id :{
+            type : String,
+            required :  true,
+        },
+        url : {
+            type : String,
+            required :  true,
+        },
+    },
+    purchaseNo : {
+        type : Number,
+        default : 0
+    },
+
     createdAt : {
         type : Date,
         immutable : true,

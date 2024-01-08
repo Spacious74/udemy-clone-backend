@@ -49,6 +49,9 @@ const userSchema = new mongoose.Schema({
             },
             totalLectures : {
                 type : Number
+            },
+            lecturesCompleted : {
+                type : Number
             }
         }
     ],

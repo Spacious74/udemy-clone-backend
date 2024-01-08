@@ -11,12 +11,6 @@ courseRouter.get("/:cId", controller.getCourseDetails);
 // To create a new Course
 courseRouter.post("/create", controller.createCourse)
 
-// Adding a new lecture to the course
-courseRouter.post("/addlecture", controller.addLecture);
-
-// Deleteing a lecture
-courseRouter.delete("/deleteLecture", controller.deleteLecture);
-
 
 // Exporting this route to allRoutes.js
 module.exports = courseRouter
