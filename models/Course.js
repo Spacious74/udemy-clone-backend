@@ -46,7 +46,7 @@ const courseSchema = new mongoose.Schema({
             required :  true,
         },
     },
-    purchaseNo : {
+    totalStudentsPurchased : {
         type : Number,
         default : 0
     },

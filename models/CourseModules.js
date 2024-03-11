@@ -5,12 +5,13 @@ const courseModuleSchema = new mongoose.Schema({
         type : mongoose.Schema.Types.ObjectId,
         ref : "Educator"
     },
-    videoArr : [
+    videosArr : [
         {
             sectionName : String,
             videos : [{
-                vidLink : String,
-                vidTitle : String,
+                public_id : String,
+                url : String,
+                name : String
             }]
         }
     ],

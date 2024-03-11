@@ -17,12 +17,6 @@ const userSchema = new mongoose.Schema({
         type : String,
         required : [true, "Please enter your password"],
         minLength : [8, "Password must be at least 8 characters long."],
-        select : false,
-    }, 
-    role : {
-        type : String,
-        enum : ["admin", "user", "educator"],
-        default : "user",
     }, 
     profilePicture : {
         public_id :{
@@ -34,7 +28,6 @@ const userSchema = new mongoose.Schema({
             required :  true,
         }, 
     },
-    // playlist array stores the all courses purchased by the user.
     playlist : [
         {
             courseId  : {
@@ -47,12 +40,7 @@ const userSchema = new mongoose.Schema({
             courseTitle : {
                 type : String
             },
-            totalLectures : {
-                type : Number
-            },
-            lecturesCompleted : {
-                type : Number
-            }
+            instructor : String,
         }
     ],
     createdAt : {

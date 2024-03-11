@@ -1,9 +1,22 @@
 const mongoose = require("mongoose");
+const validator = require('validator');
 
 const educatorSchema = mongoose.Schema({
     edname : {
         type : String, 
         required : [true,"Educator name is required"],
+    },
+    edEmail : {
+        type : String,
+        required : [true,"Educator email is required"],
+        unique : true,
+        validate : validator.isEmail
+    },
+    edPassword : {
+        type : String,
+        required : [true, "Please enter your password"],
+        minLength : [8, "Password must be at least 8 characters long."],
+        select : false,
     },
     edProfilePicture : {
         public_id : {
