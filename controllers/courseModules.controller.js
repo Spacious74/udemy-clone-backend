@@ -4,7 +4,7 @@ const catchAsyncError = require("../middlewares/catchAsyncError");
 const cloudinary = require("cloudinary").v2;
 
 
-const getAllSections = catchAsyncError(async (req,res,next)=>{
+const getAllSections = catchAsyncError(async (req,res)=>{
     const courseId = req.params.courseId;
     const sections = await CourseModule.findOne({courseId: courseId});
     res.status(200).send({

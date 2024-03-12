@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 // Models
-const Cart = require('../models/Cart')
+const Cart = require("../models/Cart");
 const User = require("../models/User");
 
 const getUserById = async (req, res) => {
@@ -18,11 +18,31 @@ const getUserById = async (req, res) => {
         message: "Welcome to your profile.",
         username: user.username,
         email: user.email,
+        playlist : user.playlist
       });
     }
   } catch (error) {
     res.status(500).send({
       message: "Some internal error occurred!",
+      error: error.message,
+    });
+  }
+};
+
+const updateUserInfo = async (req, res) => {
+  const userId = req.params.userId;
+  const { username, email } = req.body;
+  try {
+    const user = await User.findOne({ _id: userId });
+    user.username = username ? username : user.username;
+    user.email = email ? email : user.email;
+    await user.save();
+    res.status(200).send({
+      message: "Info updated successfully!",
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Some internal error occured!",
       error: error.message,
     });
   }
@@ -57,8 +77,8 @@ const createUser = async (req, res) => {
 
     // assigning a cart for the user.
     await Cart.create({
-      userId : userCreated._id,
-    })
+      userId: userCreated._id,
+    });
 
     const token = jwt.sign(
       { uid: userCreated._id, email: userCreated.email },
@@ -106,9 +126,13 @@ const loginUser = async (req, res, next) => {
       return;
     }
 
-    const token = jwt.sign({ uid: user._id, email: user.email }, process.env.SECRET_KEY, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { uid: user._id, email: user.email },
+      process.env.SECRET_KEY,
+      {
+        expiresIn: "1h",
+      }
+    );
 
     res.cookie("mytoken", token, {
       httpOnly: true,
@@ -118,23 +142,36 @@ const loginUser = async (req, res, next) => {
 
     res.status(200).send({
       message: "User logged in successfully.",
-      username : user.username,
-      email : user.email,
+      username: user.username,
+      email: user.email,
       token: token,
     });
   } catch (error) {
     res.status(404).send({
-      message : 'Bad request. Please try again!',
-      error : error.message
-    })
+      message: "Bad request. Please try again!",
+      error: error.message,
+    });
   }
 };
 
-const deleteUser = async (req, res) => {};
+const logoutUser = async (req, res) => {
+  try {
+    res.clearCookie("mytoken");
+    res.status(200).send({
+      message: "User logged out. Login again!",
+    });
+  } catch (error) {
+    res.status(404).send({
+      message: "Bad request. Please try again!",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   getUserById,
   createUser,
   loginUser,
-  deleteUser,
+  logoutUser,
+  updateUserInfo,
 };

@@ -6,6 +6,7 @@ const { verifyToken } = require('../middlewares/authMiddleware');
 
 // Getting user information by its ID
 userRouter.get('/profile/:userId', verifyToken, controller.getUserById);
+userRouter.put('/update/:userId', verifyToken, controller.updateUserInfo);
 
 // Registering the user
 userRouter.post("/register", controller.createUser);
@@ -13,8 +14,8 @@ userRouter.post("/register", controller.createUser);
 // Login user 
 userRouter.post('/login', controller.loginUser);
 
-// Delete user
-userRouter.delete('/:id', controller.deleteUser);
+// Logout user
+userRouter.post('/logout', controller.logoutUser);
 
 // exporting this route to allRoutes.js
 module.exports = userRouter;
