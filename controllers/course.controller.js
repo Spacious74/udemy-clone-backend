@@ -3,6 +3,8 @@ const Course = require("../models/Course");
 const CustomErrorHandler = require("../utils/customErrorHandler");
 const catchAsyncError = require("../middlewares/catchAsyncError");
 const CourseModule = require("../models/CourseModules");
+const Review = require("../models/Review");
+const QueAns = require('../models/QueAns');
 
 const getCourseDetails = async (req, res, next) => {
   const cId = req.params.cId;
@@ -26,7 +28,6 @@ const getCourseDetails = async (req, res, next) => {
 };
 
 const getAllCourses = async (req, res) => {
-
   const min = Number(req.query.min);
   const max = Number(req.query.max);
   const sortedOrder = req.query.sortOrder;
@@ -37,7 +38,7 @@ const getAllCourses = async (req, res) => {
 
   try {
     let query = {};
-    
+
     if (searchText) {
       query.$or = [
         { title: { $regex: searchText, $options: "i" } },
@@ -50,11 +51,11 @@ const getAllCourses = async (req, res) => {
       query.category = category;
     }
 
-    if(language){
+    if (language) {
       query.language = language;
     }
 
-    if(level){
+    if (level) {
       query.level = level;
     }
 
@@ -73,9 +74,7 @@ const getAllCourses = async (req, res) => {
     } else if (sortedOrder == "des") {
       filteredResults = await Course.find(query).sort({ price: -1 }).exec();
     } else if (sortedOrder == "nan") {
-      filteredResults = await Course.find(query)
-        .sort({ createdAt: -1 })
-        .exec();
+      filteredResults = await Course.find(query).sort({ createdAt: -1 }).exec();
     }
 
     if (filteredResults.length < 1) {
@@ -85,44 +84,84 @@ const getAllCourses = async (req, res) => {
       return;
     }
     res.status(200).send({
-      totalCourses : filteredResults.length,
-      filteredResults
+      totalCourses: filteredResults.length,
+      filteredResults,
     });
   } catch (e) {
     res.status(500).send({
-      message : "Some internal error occurred !",
+      message: "Some internal error occurred !",
       error: e.message,
     });
   }
 };
 
-const createCourse = catchAsyncError(async (req, res, next) => {
-  const { title, description, category, price, educator } = req.body;
-
-  if (!title || !description || !category || !educator || !price) {
-    return next(new CustomErrorHandler("Please provide missing fields", 400));
-  }
-
-  const coursemade = await Course.create({
+const createCourse = async (req, res, next) => {
+  const {
     title,
+    subTitle,
     description,
     category,
+    subCategory,
     price,
+    language,
+    level,
     educator,
-    coursePoster: {
-      public_id: "temp",
-      url: "temp",
-    },
-  });
+    totalStudentsPurchased,
+  } = req.body;
 
-  await CourseModule.create({
-    courseId: coursemade._id,
-  });
-  -res.status(200).send({
-    success: true,
-    message: "Course and its module added successfully",
-  });
-});
+  if (
+    !title ||
+    !description ||
+    !category ||
+    !educator ||
+    !price ||
+    !language ||
+    !level
+  ) {
+    return next(new CustomErrorHandler("Please provide missing fields", 400));
+  }
+  // title, subTitle description, category, subCategory, price, language, level, educator: edId, edname,, totalStudentsPurchased
+  try {
+    const coursemade = await Course.create({
+      title,
+      subTitle,
+      description,
+      category,
+      subCategory,
+      price,
+      language,
+      level,
+      educator,
+      totalStudentsPurchased,
+      coursePoster: {
+        public_id: "temp",
+        url: "temp",
+      },
+    });
+
+    await CourseModule.create({
+      courseId: coursemade._id,
+    });
+
+    await Review.create({
+      courseId: coursemade._id,
+    });
+
+    await QueAns.create({
+      courseId : coursemade._id,
+    })
+
+    res.status(200).send({
+      success: true,
+      message: "Course and its module added successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Some iternal error occurred",
+      error: error.message,
+    });
+  }
+};
 
 const deleteCourse = catchAsyncError(async (req, res, next) => {
   const id = req.params.id;

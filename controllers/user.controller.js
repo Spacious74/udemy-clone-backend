@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 
 // Models
 const Cart = require('../models/Cart')
-const User = require("../models/User");x
+const User = require("../models/User");
 
 const getUserById = async (req, res) => {
   const userId = req.params.userId;

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 
+// title, subTitle description, category, subCategory, price, language, level, educator: edId, edname,, totalStudentsPurchased
 const courseSchema = new mongoose.Schema({
 
     // Name of course
@@ -9,6 +10,7 @@ const courseSchema = new mongoose.Schema({
         minLength : [8, "Title must be at least 8 characters long"],
         maxLength : [100, "Title can be more than 100 characters"],
     }, 
+    subTitle : String,
     // Course description what course want to educate.
     description : {
         type : String,
@@ -22,8 +24,10 @@ const courseSchema = new mongoose.Schema({
         type : String,
         reuqired : [true, "Category is required"]
     },
-
+    subCategory : String,
     price : Number,
+    language : String,
+    level : String,
 
     // Who is the educator of this course
     educator : {

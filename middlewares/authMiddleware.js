@@ -12,6 +12,7 @@ const verifyToken = (req, res, next) => {
       res.status(401).send({
         message: "Unauthorized : Invalid token",
       });
+      return;
     }
     // Additional check for decoded token if needed
     if (!decoded || !decoded.uid) {
@@ -20,8 +21,9 @@ const verifyToken = (req, res, next) => {
       });
     }
     req.user = decoded;
+    next();
   });
-  next();
+  return;
 };
 
 module.exports = {

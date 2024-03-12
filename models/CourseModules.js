@@ -11,7 +11,8 @@ const courseModuleSchema = new mongoose.Schema({
             videos : [{
                 public_id : String,
                 url : String,
-                name : String
+                name : String,
+                completed : Boolean,
             }]
         }
     ],
