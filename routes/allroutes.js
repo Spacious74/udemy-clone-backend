@@ -23,7 +23,7 @@ allRoutes.use('/skillup/api/v1/qa', qaRouter);
 
 
 // Base API route
-allRoutes.use("skillup/api/v1", (req,res)=>{
+allRoutes.use("/skillup/api/v1", (req,res)=>{
     res.status(200).send({
         message : "Hello this is the home page"
     })

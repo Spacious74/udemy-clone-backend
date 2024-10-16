@@ -82,7 +82,7 @@ const getCart = async (req, res) => {
   const userId = req.params.userId;
   try {
     const cart = await Cart.findOne({ userId: userId });
-    const isEmpty = cart.length == 0 ? true : false;
+    const isEmpty = cart.cartItems.length == 0 ? true : false;
     res.status(200).send({
       cartItemsLength: cart.cartItems.length,
       isEmpty,

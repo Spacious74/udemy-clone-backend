@@ -4,12 +4,13 @@ const CustomErrorHandler = require("../utils/customErrorHandler");
 const catchAsyncError = require("../middlewares/catchAsyncError");
 const CourseModule = require("../models/CourseModules");
 const Review = require("../models/Review");
-const QueAns = require('../models/QueAns');
+const QueAns = require("../models/QueAns");
 
 const getCourseDetails = async (req, res, next) => {
   const cId = req.params.cId;
   try {
     const course = await Course.findOne({ _id: cId });
+    const reviews = await Review.findOne({ courseId: cId });
     if (!course) {
       res.status(404).send({
         message: "Course not found. We are contacting to educator.",
@@ -18,6 +19,7 @@ const getCourseDetails = async (req, res, next) => {
     res.status(200).send({
       message: "Course details fetched successfully",
       course,
+      reviews
     });
   } catch (error) {
     res.status(500).send({
@@ -28,6 +30,9 @@ const getCourseDetails = async (req, res, next) => {
 };
 
 const getAllCourses = async (req, res) => {
+  const page = req.query.page;
+  const limit = 10;
+  const skip = (page) * limit;
   const min = Number(req.query.min);
   const max = Number(req.query.max);
   const sortedOrder = req.query.sortOrder;
@@ -35,7 +40,7 @@ const getAllCourses = async (req, res) => {
   const language = req.query.language;
   const level = req.query.level;
   const searchText = req.query.searchText;
-
+  let totalResults = await Course.find();
   try {
     let query = {};
 
@@ -53,6 +58,7 @@ const getAllCourses = async (req, res) => {
 
     if (language) {
       query.language = language;
+
     }
 
     if (level) {
@@ -67,14 +73,15 @@ const getAllCourses = async (req, res) => {
       query.price = { $lte: max };
     }
 
-    let filteredResults = await Course.find(query);
+    totalResults = await Course.find(query);
+    let filteredResults = await Course.find(query).skip(skip).limit(limit);
 
-    if (sortedOrder == "asc") {
-      filteredResults = await Course.find(query).sort({ price: 1 }).exec();
-    } else if (sortedOrder == "des") {
-      filteredResults = await Course.find(query).sort({ price: -1 }).exec();
-    } else if (sortedOrder == "nan") {
-      filteredResults = await Course.find(query).sort({ createdAt: -1 }).exec();
+    if (sortedOrder == "lth") {
+      filteredResults = await Course.find(query).sort({ price: 1 }).skip(skip).limit(limit);
+    } else if (sortedOrder == "htl") {
+      filteredResults = await Course.find(query).sort({ price: -1 }).skip(skip).limit(limit);
+    } else if (sortedOrder == "") {
+      filteredResults = await Course.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
     }
 
     if (filteredResults.length < 1) {
@@ -84,7 +91,7 @@ const getAllCourses = async (req, res) => {
       return;
     }
     res.status(200).send({
-      totalCourses: filteredResults.length,
+      totalCourses: totalResults.length,
       filteredResults,
     });
   } catch (e) {
@@ -97,16 +104,7 @@ const getAllCourses = async (req, res) => {
 
 const createCourse = async (req, res, next) => {
   const {
-    title,
-    subTitle,
-    description,
-    category,
-    subCategory,
-    price,
-    language,
-    level,
-    educator,
-    totalStudentsPurchased,
+    title, subTitle, description, category, subCategory, price, language, level, educator, totalStudentsPurchased,
   } = req.body;
 
   if (
@@ -148,8 +146,8 @@ const createCourse = async (req, res, next) => {
     });
 
     await QueAns.create({
-      courseId : coursemade._id,
-    })
+      courseId: coursemade._id,
+    });
 
     res.status(200).send({
       success: true,

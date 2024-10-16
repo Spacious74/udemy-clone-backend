@@ -14,6 +14,9 @@ userRouter.post("/register", controller.createUser);
 // Login user 
 userRouter.post('/login', controller.loginUser);
 
+//Get User Details by token verification
+userRouter.get('/getUserLogonData', verifyToken, controller.getSessionLogonData);
+
 // Logout user
 userRouter.post('/logout', controller.logoutUser);
 

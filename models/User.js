@@ -3,63 +3,112 @@ const validator = require('validator');
 
 // Creating a user schema to make a model of User using Schema method
 const userSchema = new mongoose.Schema({
-    username : {
-        type : String,
-        required : [true, "Please enter your name."]
+    username: {
+        type: String,
+        required: true,
+        trim: true
     },
-    email : {
-        type : String,
-        required : [true, "Please enter your email"],
-        unique : true,
-        validate :  validator.isEmail
+    headline : {
+        type : String
     },
-    password : {
-        type : String,
-        required : [true, "Please enter your password"],
-        minLength : [8, "Password must be at least 8 characters long."],
-    }, 
-    profilePicture : {
-        public_id :{
-            type : String,
-            required :  true,
-        },
-        url : {
-            type : String,
-            required :  true,
-        }, 
+    email: {
+        type: String,
+        required: true,    
+        unique: true,
+        trim: true,
+        lowercase: true
     },
-    playlist : [
-        {
-            courseId  : {
-                type : mongoose.Schema.Types.ObjectId,
-                ref : "Course"
-            },
-            coursePoster : {
-                type : String
-            },
-            courseTitle : {
-                type : String
-            },
-            instructor : String,
-        }
-    ],
-    createdAt : {
-        type : Date,
-        immutable : true,
-        default : ()=> Date.now()
+    password: {
+        type: String,
+        required: true
     },
-    updatedAt : {
-        type : Date,
-        default : ()=> Date.now()
+    role: {
+        type: String,
+        enum: ['student', 'instructor', 'admin'],
+        default: 'student'
     },
-    
-    // This token is used while user trying to recreate a new password
-    resetPasswordToken : String,
+    profileImage: {
+        type: String,
+        default: ''
+    },
+    bio: {
+        type: String,
+        trim: true,
+        default: ''
+    },
+    coursesCreated: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course'
+    }],
+    coursesEnrolled: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course'
+    }],
+    wishlist: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course'
+    }],
+    progress: [{
+        courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+        completedLectures: { type: Number, default: 0 },
+        totalLectures: { type: Number }
+    }],
+    socialLinks: {
+        linkedin: { type: String, trim: true, default: '' },
+        twitter: { type: String, trim: true, default: '' },
+        github: { type: String, trim: true, default: '' }
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    lastLogin: {
+        type: Date
+    },
+    notifications: [{
+        type: { type: String },
+        message: { type: String },
+        read: { type: Boolean, default: false },
+        createdAt: { type: Date, default: Date.now }
+    }],
+    resetPasswordToken: {
+        type: String
+    },
+    resetPasswordExpires: {
+        type: Date
+    },
+    isInstructor: {
+        type: Boolean,
+        default: false
+    },
+    earnings: {
+        type: Number,
+        default: 0
+    },
+    payoutMethod: {
+        type: String,
+        default: ''
+    },
+    certifications: [{
+        courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+        certificateUrl: { type: String, trim: true }
+    }],
+    bookmarkedCourses: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course'
+    }]
 
-    // This stores the token expire time when user sending the otp to change the password
-    resetPasswordExpire : String
+}, {
+    timestamps: true  // Automatically adds createdAt and updatedAt fields
+  })
 
-})
-
-const User = mongoose.model("User",userSchema);
+const User = mongoose.model("User", userSchema);
 module.exports = User

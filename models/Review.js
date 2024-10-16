@@ -6,14 +6,15 @@ const reviewSchema = new mongoose.Schema({
     ref: "Course",
     required: true,
   },
-  reviewArr: [{
+  reviewArr: [
+    {
     userId : mongoose.Schema.Types.ObjectId,
     username : String,
     rating : Number,
     desc : String
-  }],
+    }
+  ],
 });
 
 const Review = mongoose.model('Review', reviewSchema);
-
 module.exports = Review;
