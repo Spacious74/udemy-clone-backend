@@ -3,16 +3,20 @@ const mongoose = require("mongoose");
 const courseModuleSchema = new mongoose.Schema({
     courseId : {
         type : mongoose.Schema.Types.ObjectId,
-        ref : "Educator"
+        ref : "Course"
     },
-    videosArr : [
+    sectionArr : [
         {
             sectionName : String,
             videos : [{
                 public_id : String,
                 url : String,
                 name : String,
-                completed : Boolean,
+                completed : {
+                    type : Boolean,
+                    default : false
+                },
+                position : Number
             }]
         }
     ],

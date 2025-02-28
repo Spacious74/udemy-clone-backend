@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const cloudinary = require('cloudinary').v2;
 
 // Models
 const Cart = require("../models/Cart");
@@ -30,23 +31,122 @@ const getUserById = async (req, res) => {
 };
 
 const updateUserInfo = async (req, res) => {
-  const userId = req.params.userId;
-  const { username, email } = req.body;
+  const userData = req.body;
   try {
-    const user = await User.findOne({ _id: userId });
-    user.username = username ? username : user.username;
-    user.email = email ? email : user.email;
-    await user.save();
-    res.status(200).send({
-      message: "Info updated successfully!",
+    const user = await User.findOne({ _id: userData.userId });
+    if (!user) {
+      res.status(404).send({
+        message: "User not found",
+        success: false,
+      }); return;
+    }
+    const updatedUser = await User.findByIdAndUpdate(userData.userId, userData, {
+      new: true, runValidators: true
     });
+
+    res.status(200).send({
+      data: updatedUser,
+      message: "User info. updated successfully!",
+      success: true,
+    });
+
   } catch (error) {
     res.status(500).send({
       message: "Some internal error occured!",
       error: error.message,
+      success: false,
     });
   }
 };
+
+const uploadImageToCloudinary = async (req, res) => {
+  try {
+    const file = req.files.file;
+    const userId = req.user.uid;
+
+    const user = await User.findById({_id : userId});
+    if(user.profileImage != ''){
+      const publicId = user.profileImage.split('/').pop().split('.')[0];
+      const deleteResult = await deleteImageFromCloudinary(publicId);
+      if (deleteResult.success) {
+        user.profileImage = "";
+        await user.save();
+      } else {
+        return res.status(500).json({ message: deleteResult.message });
+      }
+    }
+
+    if (!file) {
+      return res.status(400).json({ message: 'No file uploaded.', success: false });
+    }
+    const base64Data = `data:${file.mimetype};base64,${file.data.toString('base64')}`;
+    const result = await cloudinary.uploader.upload(base64Data, {
+      folder: 'SkillUp_UserProfile',
+    });
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profileImage: result.secure_url },
+      { new: true, runValidators: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'File uploaded successfully.',
+      data: updatedUser,
+    });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Image upload failed.', error: error.message });
+  }
+};
+
+
+const deleteImageFromCloudinary = async (publicId) => {
+  try {
+    const result = await cloudinary.uploader.destroy('SkillUp_UserProfile/' + publicId);
+    console.log(result);
+    if (result.result === 'ok') {
+      return { success: true, message: 'Image deleted successfully.' };
+    } else {
+      return { success: false, message: 'Image deletion failed.', result };
+    }
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    return { success: false, message: 'An error occurred during image deletion.', error: error.message };
+  }
+};
+
+
+const deleteUploadedImage = async (req, res) => {
+
+  const userId = req.user.uid;
+  try {
+
+    const user = await User.findById(userId);
+    if (!user || !user.profileImage) {
+      return res.status(404).json({ message: 'User or Profile Image not found.' });
+    }
+
+    const publicId = user.profileImage.split('/').pop().split('.')[0]; // Extract public ID from URL
+    
+    const deleteResult = await deleteImageFromCloudinary(publicId);
+
+    if (deleteResult.success) {
+      // Remove the image URL from the user record
+      user.profileImage = ""; // Optionally set the image field to null or an empty string
+      await user.save();
+      return res.status(200).json({ success: true, message: 'Profile picture deleted successfully.', data: user });
+
+    } else {
+      return res.status(500).json({ success: false, message: deleteResult.message });
+    }
+
+  } catch (error) {
+    return res.status(500).json({success: false, message: 'Internal server error.', error: error.message });
+  }
+}
+
 
 const createUser = async (req, res) => {
   const userbody = req.body;
@@ -56,7 +156,7 @@ const createUser = async (req, res) => {
     });
     return;
   }
-  
+
   try {
     const user = await User.findOne({ email: userbody.email });
     if (user) {
@@ -77,11 +177,11 @@ const createUser = async (req, res) => {
     });
 
     const token = jwt.sign(
-      { uid: userCreated._id, email: userCreated.email }, process.env.SECRET_KEY, { expiresIn: "1h" }
+      { uid: userCreated._id, email: userCreated.email }, process.env.SECRET_KEY, { expiresIn: "1d" }
     );
 
     res.status(201).send({
-      data : userCreated,
+      data: userCreated,
       message: "User registered successfully!",
       success: true,
       token,
@@ -96,12 +196,12 @@ const createUser = async (req, res) => {
   }
 };
 
-const getSessionLogonData = async(req, res)=>{
+const getSessionLogonData = async (req, res) => {
   try {
 
     const userId = req.user.uid;
-    if(!userId){
-      return res.status(404).send({    
+    if (!userId) {
+      return res.status(404).send({
         message: "Something went wrong while token authentication. Try again!",
         success: false,
       });
@@ -109,22 +209,22 @@ const getSessionLogonData = async(req, res)=>{
     const user = await User.findById(userId).select('-password'); // Exclude password
 
     if (!user) {
-      return res.status(404).send({    
+      return res.status(404).send({
         message: "User not found",
         success: false,
       });
     }
 
     // User details return karo
-    res.status(200).send({    
-      data : user,
+    res.status(200).send({
+      data: user,
       success: true,
     });
 
   } catch (error) {
     console.error(error);
     res.status(401).send(
-      {    
+      {
         message: "Invalid or Expired token provided.",
         success: false,
       }
@@ -148,18 +248,18 @@ const loginUser = async (req, res, next) => {
     if (!result) {
       return res.status(401).send({
         message: "Invalid credentials! Please try again.",
-        success : false,
+        success: false,
       });
     }
 
     const token = jwt.sign(
       { uid: user._id, email: user.email },
       process.env.SECRET_KEY,
-      {expiresIn: "1h"}
+      { expiresIn: "1d" }
     );
 
     return res.status(200).send({
-      data : user,
+      data: user,
       message: "User Loggined successfully!",
       success: true,
       token,
@@ -192,5 +292,7 @@ module.exports = {
   loginUser,
   logoutUser,
   updateUserInfo,
-  getSessionLogonData
+  getSessionLogonData,
+  uploadImageToCloudinary,
+  deleteUploadedImage
 };

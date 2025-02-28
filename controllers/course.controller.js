@@ -29,6 +29,32 @@ const getCourseDetails = async (req, res, next) => {
   }
 };
 
+const getCourseByEdIdAndCourseId = async(req, res)=>{
+  const courseId = req.query.courseId;
+  const educatorId = req.query.edId;
+  try {
+    const course = await Course.findOne({_id : courseId, "educator.edId": educatorId});
+    if(!course){
+      res.status(404).send({
+        message: "Course not found.",
+        success : false,
+        data : undefined
+      });
+    }
+    res.status(200).send({
+      message: "Course details fetched successfully",
+      success: true,
+      data : course
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Some internal error occurred",
+      error: error.message,
+      success : false
+    });
+  }
+}
+
 const getAllCourses = async (req, res) => {
   const page = req.query.page;
   const limit = 10;
@@ -103,34 +129,19 @@ const getAllCourses = async (req, res) => {
 };
 
 const createCourse = async (req, res, next) => {
-  const {
-    title, subTitle, description, category, subCategory, price, language, level, educator, totalStudentsPurchased,
-  } = req.body;
 
-  if (
-    !title ||
-    !description ||
-    !category ||
-    !educator ||
-    !price ||
-    !language ||
-    !level
-  ) {
-    return next(new CustomErrorHandler("Please provide missing fields", 400));
+  const { title, subTitle, description, category, subCategory, price, language, level, educator, totalStudentsPurchased } = req.body;
+
+  if ( !title || !description || !category || !educator || !price || !language || !level ) {
+    res.status(500).send({
+      message: "Missing required information!",
+      error: "Error",
+    });
   }
-  // title, subTitle description, category, subCategory, price, language, level, educator: edId, edname,, totalStudentsPurchased
+
   try {
-    const coursemade = await Course.create({
-      title,
-      subTitle,
-      description,
-      category,
-      subCategory,
-      price,
-      language,
-      level,
-      educator,
-      totalStudentsPurchased,
+    const coursemade = await Course.create({ title, subTitle, description, category, subCategory, price, language, 
+      level, educator, totalStudentsPurchased,
       coursePoster: {
         public_id: "temp",
         url: "temp",
@@ -150,9 +161,11 @@ const createCourse = async (req, res, next) => {
     });
 
     res.status(200).send({
+      data : coursemade,
       success: true,
       message: "Course and its module added successfully",
     });
+
   } catch (error) {
     res.status(500).send({
       message: "Some iternal error occurred",
@@ -216,6 +229,8 @@ const getAllCoursesByCategory = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
   getAllCourses,
   createCourse,
@@ -223,4 +238,5 @@ module.exports = {
   updateCourse,
   getCourseDetails,
   getAllCoursesByCategory,
+  getCourseByEdIdAndCourseId
 };

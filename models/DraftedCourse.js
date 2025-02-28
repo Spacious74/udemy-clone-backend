@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 // title, subTitle description, category, subCategory, price, language, level, educator: edId, edname,, totalStudentsPurchased
-const courseSchema = new mongoose.Schema({
+const draftedCourseSchema = new mongoose.Schema({
 
     // Name of course
     title : {
@@ -17,6 +17,8 @@ const courseSchema = new mongoose.Schema({
         required : [true, "Course description is required"],
         minLength : [8, "Course Description must be at least 8 characters long"],
     },  
+    
+
     // Which category belong a course
     category : {
         type : String,
@@ -26,6 +28,7 @@ const courseSchema = new mongoose.Schema({
     price : Number,
     language : String,
     level : String,
+
     // Who is the educator of this course
     educator : {
         edId : {
@@ -40,11 +43,9 @@ const courseSchema = new mongoose.Schema({
     coursePoster : {
         public_id :{
             type : String,
-            required :  true,
         },
         url : {
             type : String,
-            required :  true,
         },
     },
     totalStudentsPurchased : {
@@ -64,5 +65,5 @@ const courseSchema = new mongoose.Schema({
 
 })
 
-const Course = mongoose.model("Course", courseSchema);
-module.exports = Course;
+const DraftedCourse = mongoose.model("DraftedCourse", draftedCourseSchema);
+module.exports = DraftedCourse;

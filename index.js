@@ -1,7 +1,8 @@
 const {app, dbconnection} = require("./connections");
 const PORT = process.env.PORT || 8080;
 const cloudinary = require('cloudinary').v2;
-const cookieParser = require('cookie-parser');
+const fileUpload = require('express-fileupload');
+const cookieParser = require('cookie-parser');;
 const cors = require("cors");
 // connecting database to Mongo Atlas
 dbconnection();
@@ -12,11 +13,16 @@ cloudinary.config({
     api_secret: process.env.CLOUD_API_SECRET_KEY 
 });
 
+// Enable files upload
+app.use(fileUpload({
+    useTempFiles: false, 
+}));
 app.use(cookieParser());
 app.use(cors({
     origin: 'http://localhost:4200',
     credentials : true
 }));
+
 
 // importing all routes
 const allRoutes = require("./routes/allroutes")

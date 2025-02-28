@@ -1,12 +1,16 @@
 const express = require('express');
 const userRouter = express.Router();
 const controller = require("../controllers/user.controller");
-const { verifyToken } = require('../middlewares/authMiddleware');
+const upload = require('../config/multerConfig');
+const { verifyToken, verifyTokenEncoded } = require('../middlewares/authMiddleware');
 
 
 // Getting user information by its ID
 userRouter.get('/profile/:userId', verifyToken, controller.getUserById);
-userRouter.put('/update/:userId', verifyToken, controller.updateUserInfo);
+
+userRouter.post('/update', controller.updateUserInfo);
+userRouter.post('/upload', verifyToken, controller.uploadImageToCloudinary);
+userRouter.delete('/deleteImage', verifyToken, controller.deleteUploadedImage);
 
 // Registering the user
 userRouter.post("/register", controller.createUser);

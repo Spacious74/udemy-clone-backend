@@ -4,6 +4,8 @@ const controller = require('../controllers/course.controller')
 
 courseRouter.get("/", controller.getAllCourses);
 courseRouter.get("/:cId", controller.getCourseDetails);
+courseRouter.get('/getDraftedCourse', controller.getCourseByEdIdAndCourseId);
+
 courseRouter.post("/create", controller.createCourse)
 courseRouter.delete("/delete/:id", controller.deleteCourse);
 courseRouter.put("/update/:id", controller.updateCourse);

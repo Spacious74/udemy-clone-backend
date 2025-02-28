@@ -10,10 +10,12 @@ const cartRouter = require("./cart.route");
 const purchaseRouter = require("./purchase.route");
 const reviewRouter = require('./review.route');
 const qaRouter = require('./qa.route');
+const draftedCourseRouter = require("./draftedCourse.route");
 
 // Using all imported routes through a single route called allRoutes and exporting it to index.js
 allRoutes.use('/skillup/api/v1/course',courseRouter)
-allRoutes.use("/skillup/api/v1/module",moduleRouter);
+allRoutes.use('/skillup/api/v1/draftedCourse',draftedCourseRouter)
+allRoutes.use("/skillup/api/v1/videoModule",moduleRouter);
 allRoutes.use("/skillup/api/v1/user",userRouter)
 allRoutes.use("/skillup/api/v1/educator", educatorRouter)
 allRoutes.use("/skillup/api/v1/cart", cartRouter),

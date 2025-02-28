@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['student', 'instructor', 'admin'],
+        enum: ['student', 'teacher', 'admin'],
         default: 'student'
     },
     profileImage: {
@@ -55,12 +55,13 @@ const userSchema = new mongoose.Schema({
     }],
     socialLinks: {
         linkedin: { type: String, trim: true, default: '' },
-        twitter: { type: String, trim: true, default: '' },
+        portfolio: { type: String, trim: true, default: '' },
         github: { type: String, trim: true, default: '' }
     },
     createdAt: {
         type: Date,
         default: Date.now
+        
     },
     updatedAt: {
         type: Date,

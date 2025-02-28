@@ -4,128 +4,243 @@ const catchAsyncError = require("../middlewares/catchAsyncError");
 const cloudinary = require("cloudinary").v2;
 
 
-const getAllSections = catchAsyncError(async (req,res)=>{
-    const courseId = req.params.courseId;
-    const sections = await CourseModule.findOne({courseId: courseId});
-    res.status(200).send({
-        message : "Course Sections fetched successfully",
-        sections : sections.videosArr
-    })
-})
-
-
-const addSection = catchAsyncError(async (req, res, next) => {
-  const id = req.params.couresId;
-  const module = await CourseModule.findOne({ courseId: id });
-  module.videosArr.push({
-    sectionName: req.body.sectionName,
-    videos: [],
-  });
-  await module.save();
-
-  res.status(200).send({
-    message : "Section added successfully..."
-  })
-
-});
-
-const deleteSection = catchAsyncError(async (req,res, next)=>{
-    const sectionId = req.query.sectionId;
+const getAllSections = async (req, res) => {
     const courseId = req.query.courseId;
-    const module = await CourseModule.findOne({courseId : courseId});
-
-    module.videosArr.pull({_id : sectionId});
-    await module.save();
-    res.status(200).send({
-        message : "Section removed successfully.."
-    })
-})
-
-const updateSection = catchAsyncError(async (req,res,next) => {
-
-    const sectionId = req.query.sectionId;
-    const courseId = req.query.courseId;
-    const module = await CourseModule.findOne({courseId : courseId});
-    let newName = req.body.sectionName;
-
-    const sectionIndex = module.videosArr.findIndex(section => section._id == sectionId);
-
-    if(!req.body.sectionName){
-        newName = module.videosArr[sectionIndex].sectionName
+    try {
+        const videoModule = await CourseModule.findOne({ courseId: courseId });
+        if (!videoModule) {
+            res.status(500).send({
+                message: "No sections found",
+                error: "Error while fetching sections of this course",
+                success: false
+            });
+        }
+        res.status(200).send({
+            message: "Course Sections fetched successfully",
+            success: true,
+            data: videoModule.sectionArr
+        })
+    } catch (error) {
+        res.status(500).send({
+            message: "Some iternal error occurred",
+            error: error.message,
+            success : false
+        });
     }
 
-    module.videosArr[sectionIndex].sectionName = newName;
+}
 
-    await module.save();
 
-    res.status(200).send({
-        message : "Section name updated successfully",
-    })
+const addSection = async (req, res) => {
 
-})
+    const id = req.query.courseId;
+    const {sectionName} = req.body;
+    console.log(req.body);
 
-const addVideoToSection = catchAsyncError(async (req,res,next) => {
-    const bd = req.body;
-    const courseId = req.query.courseId;
-    const sectionId = req.query.sectionId;
-    if(!bd.url || !bd.name || !bd.publicId){
-        return next(new CustomErrorHandler("Missing information", 500));
+    try {
+        const module = await CourseModule.findOne({ courseId: id });
+        if(!sectionName){
+            res.status(500).send({
+                message: "Missing section name",
+                error: "Enter required fields to save this record",
+                success : false
+            });
+            return;
+        }
+        module.sectionArr.push({
+            sectionName: req.body.sectionName,
+        });
+        await module.save();
+        res.status(200).send({
+            message: "Section added successfully...",
+            success: true,
+            data: module.sectionArr
+        });
+
+    } catch (error) {
+
+        res.status(500).send({
+            message: "Some iternal error occurred",
+            error: error.message,
+            success : false
+        });
+
     }
-    // name, url, publicId, setctionId, courseId
-    const module = await CourseModule.findOne({courseId : courseId});
-    const sectionIndex = module.videosArr.findIndex(section => section._id == sectionId);
 
-    module.videosArr[sectionIndex].videos.push({
-        public_id : bd.publicId,
-        url : bd.url,
-        name : bd.name
-    });
-    await module.save();
+};
 
-    res.status(200).send({
-        message : "Video uploaded successfully",
-    })
+const deleteSection = async (req, res) => {
+
+    const sectionId = req.query.sectionId;
+    const courseId = req.query.courseId;
+
+    try {
+        const module = await CourseModule.findOne({ courseId: courseId });
+        module.sectionArr.pull({ _id: sectionId });
+        await module.save();
+        res.status(200).send({
+            message: "Section removed successfully.",
+            success : true,
+            data : module.sectionArr
+        });
+
+    } catch (error) {
+        res.status(500).send({
+            message: "Some iternal error occurred",
+            error: error.message,
+            success : false
+        });
+    }
+  
+};
+
+const updateSection = async (req, res) => {
+
+    const sectionId = req.query.sectionId;
+    const courseId = req.query.courseId;
+
+    try {
+        const module = await CourseModule.findOne({ courseId: courseId });
+        let newName = req.body.sectionName;
     
-})
-const deleteVideo = catchAsyncError(async(req,res,next)=>{
+        const sectionIndex = module.sectionArr.findIndex(section => section._id == sectionId);
+    
+        if (!req.body.sectionName) {
+            newName = module.sectionArr[sectionIndex].sectionName;
+            res.status(500).send({
+                message: "Section name is required to update.",
+                error: "Error",
+                success : false
+            });
+        }
+    
+        module.sectionArr[sectionIndex].sectionName = newName;
+    
+        await module.save();
+    
+        res.status(200).send({
+            message: "Section name updated successfully",
+            success : true,
+            data : module.sectionArr
+        })
+    } catch (error) {
+        res.status(500).send({
+            message: "Some iternal error occurred",
+            error: error.message,
+            success : false
+        });
+    }
+
+
+}
+
+const addVideoToSection = async (req, res, next) => {
+    const {videoTitle} = req.body;
+    const courseId = req.query.courseId;
+    const sectionId = req.query.sectionId;
+    try {
+        const module = await CourseModule.findOne({ courseId: courseId });
+        const sectionIndex = module.sectionArr.findIndex(section => section._id == sectionId);
+        module.sectionArr[sectionIndex].videos.push({name : videoTitle});
+        await module.save();
+        res.status(200).send({
+            message: "Video uploaded successfully",
+            success : true,
+            data : module.sectionArr
+        });
+    } catch (error) {
+        res.status(500).send({
+            message: "Some iternal error occurred",
+            error: error.message,
+            success : false
+        });
+    }
+};
+
+
+
+const deleteVideo = catchAsyncError(async (req, res, next) => {
+
     const courseId = req.query.courseId;
     const sectionId = req.query.sectionId;
     const videoId = req.query.videoId;
-    const module = await CourseModule.findOne({courseId : courseId});
-    const sectionIndex = module.videosArr.findIndex(section => section._id == sectionId);
-    const videoIndex = module.videosArr[sectionIndex].videos.findIndex(video => video._id == videoId);
-    let videoPublicId = module.videosArr[sectionIndex].videos[videoIndex].public_id;
-    const result = await cloudinary.uploader.destroy(videoPublicId, {resource_type: 'video'});
-    module.videosArr[sectionIndex].videos.pull({_id : videoId});
-    await module.save();
-    res.status(200).send({
-        message : "Video deleted successfully!!!",
-        result : result.result
-    });
+    try {
+        const module = await CourseModule.findOne({ courseId: courseId });
+        const sectionIndex = module.sectionArr.findIndex(section => section._id == sectionId);
+        const videoIndex = module.sectionArr[sectionIndex].videos.findIndex(video => video._id == videoId);
+        let videoPublicId = module.sectionArr[sectionIndex].videos[videoIndex].public_id;
+        const result = await cloudinary.uploader.destroy(videoPublicId, { resource_type: 'video' });
+        module.sectionArr[sectionIndex].videos.pull({ _id: videoId });
+        await module.save();
+        res.status(200).send({
+            message: "Video deleted successfully!!!",
+            success : true,
+            data : module.sectionArr
+        });
+    } catch (error) {
+        res.status(500).send({
+            message: "Some iternal error occurred",
+            error: error.message,
+            success : false
+        });
+    }
+  
 });
 
-const updateVideoTitle = catchAsyncError(async (req,res,next)=>{
+const updateVideoTitle = catchAsyncError(async (req, res, next) => {
 
     const courseId = req.query.courseId;
     const sectionId = req.query.sectionId;
     const videoId = req.query.videoId;
     let newName = req.body.videoTitle;
 
-    const module = await CourseModule.findOne({courseId : courseId});
-    const sectionIndex = module.videosArr.findIndex(section => section._id == sectionId);
-    const videoIndex = module.videosArr[sectionIndex].videos.findIndex(video => video._id == videoId);
-    if(!req.body.videoTitle){
-        newName = module.videosArr[sectionIndex].videos[videoIndex].name
+    const module = await CourseModule.findOne({ courseId: courseId });
+    const sectionIndex = module.sectionArr.findIndex(section => section._id == sectionId);
+    const videoIndex = module.sectionArr[sectionIndex].videos.findIndex(video => video._id == videoId);
+    if (!req.body.videoTitle) {
+        newName = module.sectionArr[sectionIndex].videos[videoIndex].name
     }
-    module.videosArr[sectionIndex].videos[videoIndex].name = newName;
+    module.sectionArr[sectionIndex].videos[videoIndex].name = newName;
 
     await module.save();
 
     res.status(200).send({
-        message : "Video name updated successfully",
+        message: "Video title updated successfully",
+        success : true,
+        data : module
     });
 
-})
+});
+
+const updateVideoFile = async(req,res)=>{
+    const courseId = req.query.courseId;
+    const sectionId = req.query.sectionId;
+    const videoId = req.query.videoId;
+    let {public_id, url} = req.body;
+
+    try {
+        const module = await CourseModule.findOne({ courseId: courseId });
+        const sectionIndex = module.sectionArr.findIndex(section => section._id == sectionId);
+        const videoIndex = module.sectionArr[sectionIndex].videos.findIndex(video => video._id == videoId);
+
+        module.sectionArr[sectionIndex].videos[videoIndex].public_id = public_id;
+        module.sectionArr[sectionIndex].videos[videoIndex].url = url;
+        await module.save();
+
+        res.status(200).send({
+            message: "Video file uploaded successfully.",
+            success : true,
+            data : module.sectionArr
+        });
+
+    } catch (error) {
+        res.status(500).send({
+            message: "Some iternal error occurred!",
+            error: error.message,
+            success : false
+        });
+    }
+}
 
 module.exports = {
     addSection,
@@ -134,5 +249,6 @@ module.exports = {
     updateSection,
     addVideoToSection,
     updateVideoTitle,
-    deleteVideo
+    deleteVideo,
+    updateVideoFile
 }
