@@ -10,6 +10,7 @@ moduleRouter.post('/addVideo', controller.addVideoToSection);
 moduleRouter.put("/update", controller.updateSection);
 moduleRouter.put('/updateVideoTitle', controller.updateVideoTitle);
 moduleRouter.put('/updateVideoFile', controller.updateVideoFile);
+moduleRouter.put('/addVideoFile', controller.addVideoFile);
 
 moduleRouter.delete("/delete", controller.deleteSection);
 moduleRouter.delete('/deletevideo', controller.deleteVideo);
