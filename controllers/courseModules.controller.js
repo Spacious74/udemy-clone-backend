@@ -27,7 +27,6 @@ const getAllSections = async (req, res) => {
             success: false
         });
     }
-
 }
 
 

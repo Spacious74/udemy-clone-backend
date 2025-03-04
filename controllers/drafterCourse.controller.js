@@ -6,6 +6,81 @@ const Review = require("../models/Review");
 const QueAns = require("../models/QueAns");
 const cloudinary = require('cloudinary').v2;
 
+const getAllCourses = async (req, res) => {
+
+    const page = req.query.page;
+    const limit = 10;
+    const skip = (page) * limit;
+    const min = Number(req.query.min);
+    const max = Number(req.query.max);
+    const sortedOrder = req.query.sortOrder;
+    const category = req.query.category;
+    const language = req.query.language;
+    const level = req.query.level;
+    const searchText = req.query.searchText;
+    let totalResults = await Course.find();
+
+    try {
+        let query = {};
+
+        if (searchText) {
+            query.$or = [
+                { title: { $regex: searchText, $options: "i" } },
+                { description: { $regex: searchText, $options: "i" } },
+                { category: { $regex: searchText, $options: "i" } },
+            ];
+        }
+
+        if (category) {
+            query.category = category;
+        }
+
+        if (language) {
+            query.language = language;
+
+        }
+
+        if (level) {
+            query.level = level;
+        }
+
+        if (min && max) {
+            query.price = { $gte: min, $lte: max };
+        } else if (min) {
+            query.price = { $gte: min };
+        } else if (max) {
+            query.price = { $lte: max };
+        }
+
+        totalResults = await Course.find(query);
+        let filteredResults = await Course.find(query).skip(skip).limit(limit);
+
+        if (sortedOrder == "lth") {
+            filteredResults = await Course.find(query).sort({ price: 1 }).skip(skip).limit(limit);
+        } else if (sortedOrder == "htl") {
+            filteredResults = await Course.find(query).sort({ price: -1 }).skip(skip).limit(limit);
+        } else if (sortedOrder == "") {
+            filteredResults = await Course.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
+        }
+
+        if (filteredResults.length < 1) {
+            res.status(400).send({
+                message: "Course not found in database",
+            });
+            return;
+        }
+        res.status(200).send({
+            totalCourses: totalResults.length,
+            filteredResults,
+        });
+    } catch (e) {
+        res.status(500).send({
+            message: "Some internal error occurred !",
+            error: e.message,
+        });
+    }
+};
+
 const getAllCoursesByEdId = async (req, res) => {
     const educatorId = req.query.educatorId;
     try {
@@ -25,7 +100,7 @@ const getAllCoursesByEdId = async (req, res) => {
             message: "Some internal error occurred",
             error: error.message,
         });
-    }
+    } //2-004368298574  // 1110382946477181
 };
 
 const getOneCourseById = async (req, res) => {
@@ -56,39 +131,39 @@ const getOneCourseById = async (req, res) => {
 };
 
 
-const getCourseByEdIdAndCourseId = async(req, res)=>{
+const getCourseByEdIdAndCourseId = async (req, res) => {
     const courseId = req.query.courseId;
     const educatorId = req.query.educatorId;
     try {
-      const course = await DraftedCourse.findOne({_id : courseId, "educator.edId": educatorId});
-      const courseModule = await CourseModule.findOne({ courseId: courseId });
-      if(!course){
-        res.status(404).send({
-          message: "Course not found.",
-          success : false,
-          data : undefined
-        });
-      }
-      res.status(200).send({
-        message: "Course details fetched successfully",
-        success: true,
-        data: {
-            ...course?._doc,
-            courseModuleId: courseModule._id
+        const course = await DraftedCourse.findOne({ _id: courseId, "educator.edId": educatorId });
+        const courseModule = await CourseModule.findOne({ courseId: courseId });
+        if (!course) {
+            res.status(404).send({
+                message: "Course not found.",
+                success: false,
+                data: undefined
+            });
         }
-      });
+        res.status(200).send({
+            message: "Course details fetched successfully",
+            success: true,
+            data: {
+                ...course?._doc,
+                courseModuleId: courseModule._id
+            }
+        });
     } catch (error) {
-      res.status(500).send({
-        message: "Some internal error occurred",
-        error: error.message,
-        success : false
-      });
+        res.status(500).send({
+            message: "Some internal error occurred",
+            error: error.message,
+            success: false
+        });
     }
 }
 
 const createCourse = async (req, res, next) => {
     const { title, subTitle, description, category, subCategory,
-        price, language, level, educator,} = req.body;
+        price, language, level, educator, } = req.body;
 
     if (!title || !description || !category || !educator || !price || !language || !level) {
         res.status(500).send({
@@ -99,9 +174,9 @@ const createCourse = async (req, res, next) => {
     try {
         const coursemade = await DraftedCourse.create({
             title, subTitle, description, category, subCategory, price,
-            language, level, educator, coursePoster : {
-                public_id : "",
-                url : "",
+            language, level, educator, coursePoster: {
+                public_id: "",
+                url: "",
             }
         });
 
@@ -132,16 +207,16 @@ const createCourse = async (req, res, next) => {
 
 const deleteImageFromCloudinary = async (publicId) => {
     try {
-      const result = await cloudinary.uploader.destroy('SkillUp_CourseThumbnail/' + publicId);
-      console.log(result);
-      if (result.result === 'ok') {
-        return { success: true, message: 'Image deleted successfully.' };
-      } else {
-        return { success: false, message: 'Image deletion failed.', result };
-      }
+        const result = await cloudinary.uploader.destroy('SkillUp_CourseThumbnail/' + publicId);
+        console.log(result);
+        if (result.result === 'ok') {
+            return { success: true, message: 'Image deleted successfully.' };
+        } else {
+            return { success: false, message: 'Image deletion failed.', result };
+        }
     } catch (error) {
-      console.error('Error deleting image:', error);
-      return { success: false, message: 'An error occurred during image deletion.', error: error.message };
+        console.error('Error deleting image:', error);
+        return { success: false, message: 'An error occurred during image deletion.', error: error.message };
     }
 };
 
@@ -156,7 +231,7 @@ const uploadThumbnail = async (req, res) => {
             const deleteResult = await deleteImageFromCloudinary(publicId);
             if (deleteResult.success) {
                 course.coursePoster.url = undefined;
-                course.coursePoster.public_id=undefined;
+                course.coursePoster.public_id = undefined;
                 await course.save();
             } else {
                 return res.status(500).json({ message: deleteResult.message });
@@ -190,24 +265,24 @@ const deleteUploadedImage = async (req, res) => {
 
     const courseId = req.query.courseId;
     try {
-      const course = await DraftedCourse.findById({_id : courseId});
-    
-      const publicId = course.coursePoster.public_id.split('/')[1]; // Extract public ID from URL
-      const deleteResult = await deleteImageFromCloudinary(publicId);
-  
-      if (deleteResult.success) {
-        course.coursePoster.url = '';
-        course.coursePoster.public_id = '';
-        await course.save();
-        return res.status(200).json({ success: true, message: 'Thumbnail removed successfully.', data: course });
-      } else {
-        return res.status(500).json({ success: false, message: deleteResult.message });
-      }
-  
+        const course = await DraftedCourse.findById({ _id: courseId });
+
+        const publicId = course.coursePoster.public_id.split('/')[1]; // Extract public ID from URL
+        const deleteResult = await deleteImageFromCloudinary(publicId);
+
+        if (deleteResult.success) {
+            course.coursePoster.url = '';
+            course.coursePoster.public_id = '';
+            await course.save();
+            return res.status(200).json({ success: true, message: 'Thumbnail removed successfully.', data: course });
+        } else {
+            return res.status(500).json({ success: false, message: deleteResult.message });
+        }
+
     } catch (error) {
-      return res.status(500).json({success: false, message: 'Internal server error.', error: error.message });
+        return res.status(500).json({ success: false, message: 'Internal server error.', error: error.message });
     }
-  }
+}
 
 // Hello this is comment
 const updateCourse = catchAsyncError(async (req, res, next) => {
@@ -232,13 +307,14 @@ const updateCourse = catchAsyncError(async (req, res, next) => {
         res.status(500).send({
             message: "Some internal error occurred",
             error: error.message,
-            success : false
+            success: false
         });
     }
 
 });
 
 module.exports = {
+    getAllCourses,
     createCourse,
     getAllCoursesByEdId,
     updateCourse,

@@ -3,6 +3,7 @@ const draftedCourseRouter = express.Router();
 const controller = require('../controllers/drafterCourse.controller');
 
 draftedCourseRouter.get('/', controller.getAllCoursesByEdId);
+draftedCourseRouter.get('/getAllCourses', controller.getAllCourses);
 draftedCourseRouter.get('/courseById', controller.getOneCourseById);
 draftedCourseRouter.get('/getByCourseAndEducatorId', controller.getCourseByEdIdAndCourseId);
 

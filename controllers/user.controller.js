@@ -118,6 +118,7 @@ const deleteImageFromCloudinary = async (publicId) => {
 };
 
 
+
 const deleteUploadedImage = async (req, res) => {
 
   const userId = req.user.uid;
