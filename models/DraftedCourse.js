@@ -17,8 +17,7 @@ const draftedCourseSchema = new mongoose.Schema({
         required : [true, "Course description is required"],
         minLength : [8, "Course Description must be at least 8 characters long"],
     },  
-    
-
+    ratings : Number,
     // Which category belong a course
     category : {
         type : String,
@@ -52,7 +51,10 @@ const draftedCourseSchema = new mongoose.Schema({
         type : Number,
         default : 0
     },
-
+    isReleased : {
+        type : Boolean,
+        default : false
+    },
     createdAt : {
         type : Date,
         immutable : true,

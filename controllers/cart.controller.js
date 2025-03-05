@@ -17,7 +17,8 @@ const addToCart = async (req, res) => {
     );
     if (courseFind) {
       res.status(400).send({
-        message: "Course already in your cart",
+        message: "Course already exist in your cart",
+        success : false
       });
       return;
     }

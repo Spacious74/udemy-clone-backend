@@ -3,7 +3,7 @@ const courseRouter = express.Router();
 const controller = require('../controllers/course.controller')
 
 courseRouter.get("/", controller.getAllCourses);
-courseRouter.get("/:cId", controller.getCourseDetails);
+courseRouter.get("/getCourseById", controller.getCourseDetails);
 courseRouter.get('/getDraftedCourse', controller.getCourseByEdIdAndCourseId);
 
 courseRouter.post("/create", controller.createCourse)

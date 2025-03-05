@@ -7,24 +7,28 @@ const Review = require("../models/Review");
 const QueAns = require("../models/QueAns");
 
 const getCourseDetails = async (req, res, next) => {
-  const cId = req.params.cId;
+  const cId = req.query.courseId;
   try {
     const course = await Course.findOne({ _id: cId });
     const reviews = await Review.findOne({ courseId: cId });
     if (!course) {
       res.status(404).send({
-        message: "Course not found. We are contacting to educator.",
+        message: "Course not found. Something went wrong!",
+        success : false,
       });
+      return;
     }
     res.status(200).send({
       message: "Course details fetched successfully",
       course,
-      reviews
+      reviews,
+      success : true
     });
   } catch (error) {
     res.status(500).send({
       message: "Some internal error occurred",
       error: error.message,
+      success : false
     });
   }
 };

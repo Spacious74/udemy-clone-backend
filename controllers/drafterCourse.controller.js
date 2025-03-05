@@ -18,7 +18,6 @@ const getAllCourses = async (req, res) => {
     const language = req.query.language;
     const level = req.query.level;
     const searchText = req.query.searchText;
-    let totalResults = await Course.find();
 
     try {
         let query = {};
@@ -52,31 +51,62 @@ const getAllCourses = async (req, res) => {
             query.price = { $lte: max };
         }
 
-        totalResults = await Course.find(query);
-        let filteredResults = await Course.find(query).skip(skip).limit(limit);
+        totalResults = await DraftedCourse.find(query);
+        let filteredResults = await DraftedCourse.find(query).skip(skip).limit(limit);
 
         if (sortedOrder == "lth") {
-            filteredResults = await Course.find(query).sort({ price: 1 }).skip(skip).limit(limit);
+            filteredResults = await DraftedCourse.find(query).sort({ price: 1 }).skip(skip).limit(limit);
         } else if (sortedOrder == "htl") {
-            filteredResults = await Course.find(query).sort({ price: -1 }).skip(skip).limit(limit);
+            filteredResults = await DraftedCourse.find(query).sort({ price: -1 }).skip(skip).limit(limit);
         } else if (sortedOrder == "") {
-            filteredResults = await Course.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
+            filteredResults = await DraftedCourse.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
         }
 
         if (filteredResults.length < 1) {
             res.status(400).send({
                 message: "Course not found in database",
+                success: false
             });
             return;
         }
         res.status(200).send({
             totalCourses: totalResults.length,
-            filteredResults,
+            data: filteredResults,
+            success: true
         });
+
     } catch (e) {
         res.status(500).send({
             message: "Some internal error occurred !",
             error: e.message,
+            success: false
+        });
+    }
+};
+
+const getCourseDetails = async (req, res, next) => {
+    const cId = req.query.courseId;
+    try {
+        const course = await DraftedCourse.findOne({ _id: cId });
+        const reviews = await Review.findOne({ courseId: cId });
+        if (!course) {
+            res.status(404).send({
+                message: "Course not found. Something went wrong!",
+                success: false,
+            });
+            return;
+        }
+        res.status(200).send({
+            message: "Course details fetched successfully",
+            course,
+            reviews,
+            success: true
+        });
+    } catch (error) {
+        res.status(500).send({
+            message: "Some internal error occurred",
+            error: error.message,
+            success: false
         });
     }
 };
@@ -129,7 +159,6 @@ const getOneCourseById = async (req, res) => {
         });
     }
 };
-
 
 const getCourseByEdIdAndCourseId = async (req, res) => {
     const courseId = req.query.courseId;
@@ -284,7 +313,6 @@ const deleteUploadedImage = async (req, res) => {
     }
 }
 
-// Hello this is comment
 const updateCourse = catchAsyncError(async (req, res, next) => {
 
     const id = req.query.courseId;
@@ -313,13 +341,35 @@ const updateCourse = catchAsyncError(async (req, res, next) => {
 
 });
 
+const releaseCourse = async (req, res) => {
+    const courseId = req.query.courseId;
+    try {
+        const course = await DraftedCourse.findOne({ _id: courseId });
+        course.isReleased = true;
+        await course.save();
+        res.status(200).send({
+            data: "Course released successfully! Now students can see your created course.",
+            message: "Course released successfully!",
+            success: true,
+        });
+    } catch (error) {
+        res.status(500).send({
+            message: "Some internal error occurred",
+            error: error.message,
+            success: false,
+        })
+    }
+}
+
 module.exports = {
     getAllCourses,
-    createCourse,
     getAllCoursesByEdId,
-    updateCourse,
     getOneCourseById,
-    uploadThumbnail,
     getCourseByEdIdAndCourseId,
-    deleteUploadedImage
+    getCourseDetails,
+    createCourse,
+    updateCourse,
+    uploadThumbnail,
+    deleteUploadedImage,
+    releaseCourse,
 }

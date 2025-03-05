@@ -5,6 +5,7 @@ const cloudinary = require('cloudinary').v2;
 // Models
 const Cart = require("../models/Cart");
 const User = require("../models/User");
+const DraftedCourse = require('../models/DraftedCourse');
 
 const getUserById = async (req, res) => {
   const userId = req.params.userId;
@@ -43,6 +44,8 @@ const updateUserInfo = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userData.userId, userData, {
       new: true, runValidators: true
     });
+
+    await DraftedCourse.updateMany({ "educator.edId": userData.userId }, { $set: { "educator.edname": updatedUser.username } });
 
     res.status(200).send({
       data: updatedUser,
