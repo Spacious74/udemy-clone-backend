@@ -1,8 +1,6 @@
-const express = require("express");
-const app = express();
-
 const Cart = require("../models/Cart");
 const Course = require("../models/Course");
+const DraftedCourse = require("../models/DraftedCourse");
 
 const addToCart = async (req, res) => {
   const courseId = req.query.courseId;
@@ -10,25 +8,21 @@ const addToCart = async (req, res) => {
 
   try {
     const cart = await Cart.findOne({ userId: userId });
-    const course = await Course.findOne({ _id: courseId });
+    const course = await DraftedCourse.findOne({ _id: courseId });
 
     const courseFind = cart.cartItems.find(
       (course) => course.courseId == courseId
     );
     if (courseFind) {
-      res.status(400).send({
+      res.status(200).send({
         message: "Course already exist in your cart",
         success : false
-      });
-      return;
+      }); return;
     }
 
     let obj = {
       courseId: course._id,
-      coursePoster: {
-        public_id: "Sample Id",
-        url: "Sample url",
-      },
+      coursePoster: course.coursePoster,
       courseName: course.title,
       coursePrice: course.price,
     };
@@ -39,10 +33,12 @@ const addToCart = async (req, res) => {
       message: "Course added to your cart successfully!",
       sucess: true,
     });
+    
   } catch (error) {
     res.status(400).send({
       message: "Bad request. Try again later!",
       error: error.message,
+      success : false
     });
   }
 };
@@ -61,6 +57,7 @@ const removeFromCart = async (req, res) => {
     if (courseIndex == -1) {
       res.status(404).send({
         message: "Item not found in your cart!",
+        success : false
       });
       return;
     }
@@ -70,11 +67,13 @@ const removeFromCart = async (req, res) => {
 
     res.status(200).send({
       message: "Item removed from cart successfully!",
+      success : true
     });
   } catch (error) {
     res.status(500).send({
       message: "Some internal error occurs. Please try again later!",
       error: error.message,
+      success : false
     });
   }
 };
