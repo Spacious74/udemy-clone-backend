@@ -211,6 +211,7 @@ const getSessionLogonData = async (req, res) => {
       });
     }
     const user = await User.findById(userId).select('-password'); // Exclude password
+    const cart = await Cart.findOne({userId : userId});
 
     if (!user) {
       return res.status(404).send({
@@ -222,11 +223,11 @@ const getSessionLogonData = async (req, res) => {
     // User details return karo
     res.status(200).send({
       data: user,
+      cart : cart,
       success: true,
     });
 
   } catch (error) {
-    console.error(error);
     res.status(401).send(
       {
         message: "Invalid or Expired token provided.",

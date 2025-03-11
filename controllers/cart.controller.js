@@ -3,6 +3,7 @@ const Course = require("../models/Course");
 const DraftedCourse = require("../models/DraftedCourse");
 
 const addToCart = async (req, res) => {
+  
   const courseId = req.query.courseId;
   const userId = req.query.userId;
 
@@ -69,17 +70,20 @@ const removeFromCart = async (req, res) => {
       message: "Item removed from cart successfully!",
       success : true
     });
+
   } catch (error) {
+    
     res.status(500).send({
       message: "Some internal error occurs. Please try again later!",
       error: error.message,
       success : false
     });
+    
   }
 };
 
 const getCart = async (req, res) => {
-  const userId = req.params.userId;
+  const userId = req.query.userId;
   try {
     const cart = await Cart.findOne({ userId: userId });
     const isEmpty = cart.cartItems.length == 0 ? true : false;
