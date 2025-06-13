@@ -36,15 +36,15 @@ const userSchema = new mongoose.Schema({
         trim: true,
         default: ''
     },
+    cart : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "Cart"
+    },
     coursesCreated: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course'
     }],
     coursesEnrolled: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course'
-    }],
-    wishlist: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course'
     }],

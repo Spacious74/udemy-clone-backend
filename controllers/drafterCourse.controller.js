@@ -51,6 +51,8 @@ const getAllCourses = async (req, res) => {
             query.price = { $lte: max };
         }
 
+        query.isReleased = true; // Only fetch released courses
+
         totalResults = await DraftedCourse.find(query);
         let filteredResults = await DraftedCourse.find(query).skip(skip).limit(limit);
 
@@ -70,7 +72,7 @@ const getAllCourses = async (req, res) => {
             return;
         }
         res.status(200).send({
-            totalCourses: totalResults.length,
+            totalCourses: totalResults.length || 0,
             data: filteredResults,
             success: true
         });
@@ -94,7 +96,6 @@ const getCourseDetails = async (req, res, next) => {
                 message: "Course not found. Something went wrong!",
                 success: false,
             });
-            return;
         }
         res.status(200).send({
             message: "Course details fetched successfully",
@@ -130,7 +131,7 @@ const getAllCoursesByEdId = async (req, res) => {
             message: "Some internal error occurred",
             error: error.message,
         });
-    } //2-004368298574  // 1110382946477181
+    }
 };
 
 const getOneCourseById = async (req, res) => {

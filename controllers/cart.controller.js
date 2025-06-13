@@ -9,16 +9,28 @@ const addToCart = async (req, res) => {
 
   try {
     const cart = await Cart.findOne({ userId: userId });
+    if (!cart) {
+      return res.status(404).send({
+        message: "Cart not found! Please login again.",
+        success: false
+      });
+    }
     const course = await DraftedCourse.findOne({ _id: courseId });
+     if (!course) {
+      return res.status(404).send({
+        message: "Course not found!",
+        success: false
+      });
+    }
 
-    const courseFind = cart.cartItems.find(
-      (course) => course.courseId == courseId
+   const existingCourse = cart.cartItems.find(
+      (item) => item.courseId == courseId
     );
-    if (courseFind) {
-      res.status(200).send({
-        message: "Course already exist in your cart",
-        success : false
-      }); return;
+    if (existingCourse) {
+      return res.status(200).send({
+        message: "Course already exists in your cart",
+        success: false
+      });
     }
 
     let obj = {
@@ -26,10 +38,12 @@ const addToCart = async (req, res) => {
       coursePoster: course.coursePoster,
       courseName: course.title,
       coursePrice: course.price,
+      educatorName : course.educator.edname
     };
 
     cart.cartItems.push(obj);
     await cart.save();
+
     res.status(200).send({
       message: "Course added to your cart successfully!",
       sucess: true,
@@ -86,16 +100,26 @@ const getCart = async (req, res) => {
   const userId = req.query.userId;
   try {
     const cart = await Cart.findOne({ userId: userId });
-    const isEmpty = cart.cartItems.length == 0 ? true : false;
+    if(!cart){
+      return res.status(404).send({
+        message : "Cart not found! Please login again!",
+        error : "Cart not found!",
+        success : false
+      })
+    }
+
     res.status(200).send({
       cartItemsLength: cart.cartItems.length,
-      isEmpty,
-      cart
+      cart,
+      message : "Cart data fetched successfully!",
+      success : true
     });
+
   } catch (error) {
     res.status(error.status).send({
       message : "Some internal error occurred!",
-      error : error.message
+      error : error.message,
+      success : true
     })
   }
 };

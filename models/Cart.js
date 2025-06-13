@@ -22,12 +22,9 @@ const cartSchema = new mongoose.Schema({
           required: true,
         },
       },
-      courseName: {
-        type: String,
-      },
-      coursePrice: {
-        type : Number
-      },
+      courseName:String,
+      coursePrice: Number,
+      educatorName : String
     },
   ],
 

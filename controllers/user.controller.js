@@ -33,6 +33,7 @@ const getUserById = async (req, res) => {
 
 const updateUserInfo = async (req, res) => {
   const userData = req.body;
+  console.log(userData);
   try {
     const user = await User.findOne({ _id: userData.userId });
     if (!user) {
@@ -104,7 +105,6 @@ const uploadImageToCloudinary = async (req, res) => {
   }
 };
 
-
 const deleteImageFromCloudinary = async (publicId) => {
   try {
     const result = await cloudinary.uploader.destroy('SkillUp_UserProfile/' + publicId);
@@ -119,8 +119,6 @@ const deleteImageFromCloudinary = async (publicId) => {
     return { success: false, message: 'An error occurred during image deletion.', error: error.message };
   }
 };
-
-
 
 const deleteUploadedImage = async (req, res) => {
 
@@ -149,8 +147,7 @@ const deleteUploadedImage = async (req, res) => {
   } catch (error) {
     return res.status(500).json({success: false, message: 'Internal server error.', error: error.message });
   }
-}
-
+};
 
 const createUser = async (req, res) => {
   const userbody = req.body;
@@ -162,20 +159,23 @@ const createUser = async (req, res) => {
   }
 
   try {
+    
     const user = await User.findOne({ email: userbody.email });
+
     if (user) {
       res.status(400).send({
         message: "User already registered with this email !",
       });
       return;
     }
+
     const userCreated = await User.create({
       username: req.body.username,
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, 10)
     });
 
-    // assigning a cart for the user.
+    // Assigning a cart for the user.
     await Cart.create({
       userId: userCreated._id,
     });
@@ -240,6 +240,7 @@ const getSessionLogonData = async (req, res) => {
 const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
 
+  
   try {
     const user = await User.findOne({ email: email });
     if (!user) {
@@ -266,9 +267,10 @@ const loginUser = async (req, res, next) => {
     return res.status(200).send({
       data: user,
       message: "User Loggined successfully!",
-      success: true,
+      success: true, 
       token,
     });
+
   } catch (error) {
     return res.status(500).send({
       message: "Bad request. Please try again!",

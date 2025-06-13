@@ -8,7 +8,6 @@ draftedCourseRouter.get('/getCourseDetailsById', controller.getCourseDetails);
 draftedCourseRouter.get('/courseById', controller.getOneCourseById);
 draftedCourseRouter.get('/getByCourseAndEducatorId', controller.getCourseByEdIdAndCourseId);
 
-
 draftedCourseRouter.post('/create', controller.createCourse);
 draftedCourseRouter.post('/update', controller.updateCourse);
 draftedCourseRouter.post('/upload-thumbnail', controller.uploadThumbnail);

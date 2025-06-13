@@ -1,4 +1,5 @@
 const CourseModule = require("../models/CourseModules");
+const Course = require("../models/Course");
 const CustomErrorHandler = require("../utils/customErrorHandler");
 const catchAsyncError = require("../middlewares/catchAsyncError");
 const cloudinary = require("cloudinary").v2;
@@ -9,7 +10,7 @@ const getAllSections = async (req, res) => {
     try {
         const videoModule = await CourseModule.findOne({ courseId: courseId });
         if (!videoModule) {
-            res.status(500).send({
+            res.status(404).send({
                 message: "No sections found",
                 error: "Error while fetching sections of this course",
                 success: false
@@ -34,7 +35,6 @@ const addSection = async (req, res) => {
 
     const id = req.query.courseId;
     const { sectionName } = req.body;
-    console.log(req.body);
 
     try {
         const module = await CourseModule.findOne({ courseId: id });
