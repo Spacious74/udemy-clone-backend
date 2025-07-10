@@ -22,7 +22,7 @@ const addToCart = async (req, res) => {
         success: false
       });
     }
-
+ 
    const existingCourse = cart.cartItems.find(
       (item) => item.courseId == courseId
     );
@@ -38,7 +38,10 @@ const addToCart = async (req, res) => {
       coursePoster: course.coursePoster,
       courseName: course.title,
       coursePrice: course.price,
-      educatorName : course.educator.edname
+      educatorName : course.educator.edname,
+      lectures : course.totalLectures,
+      language : course.language,
+      level : course.level
     };
 
     cart.cartItems.push(obj);
@@ -46,7 +49,7 @@ const addToCart = async (req, res) => {
 
     res.status(200).send({
       message: "Course added to your cart successfully!",
-      sucess: true,
+      success: true,
     });
     
   } catch (error) {
@@ -57,6 +60,41 @@ const addToCart = async (req, res) => {
     });
   }
 };
+
+const mergeCart = async (req, res) => {
+  const userId = req.query.userId;
+  const cartItems = req.body.cartItems;
+  try {
+
+    let cart = await Cart.findOne({ userId: userId });
+    if (!cart) {
+      cart = new Cart({ userId: userId, cartItems: [] });
+    } 
+    
+    // Check if the course already exists in the cart
+    for (const item of cartItems) {
+      const existingCourse = cart.cartItems.find(
+        (course) => course.courseId == item.courseId
+      );
+      if (!existingCourse) {
+        cart.cartItems.push(item);
+      }
+    }
+    await cart.save();
+    res.status(200).send({
+      message: "Cart merged successfully!",
+      cart,
+      success: true
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      message: "Some internal error occurred while merging the cart!",
+      error: error.message,
+      success: false
+    });
+  }
+}
 
 const removeFromCart = async (req, res) => {
   const courseId = req.query.courseId;
@@ -128,4 +166,5 @@ module.exports = {
   addToCart,
   removeFromCart,
   getCart,
+  mergeCart
 };

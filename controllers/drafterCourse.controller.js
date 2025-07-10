@@ -36,7 +36,6 @@ const getAllCourses = async (req, res) => {
 
         if (language) {
             query.language = language;
-
         }
 
         if (level) {
@@ -86,10 +85,10 @@ const getAllCourses = async (req, res) => {
     }
 };
 
-const getCourseDetails = async (req, res, next) => {
+const getCourseDetails = async (req, res) => {
     const cId = req.query.courseId;
     try {
-        const course = await DraftedCourse.findOne({ _id: cId });
+        const course = await DraftedCourse.findOne({ _id: cId }).populate('educator.edId', 'username profileImage');
         const reviews = await Review.findOne({ courseId: cId });
         if (!course) {
             res.status(404).send({
@@ -133,6 +132,30 @@ const getAllCoursesByEdId = async (req, res) => {
         });
     }
 };
+
+const getReleaseCourseByEdId = async (req, res) => {
+    const educatorId = req.query.educatorId;
+    try {
+        const courses = await DraftedCourse.find({ "educator.edId": educatorId, isReleased: true });
+        if (!courses || courses.length < 1) {
+            res.status(200).send({
+                message: "Released Courses not found!",
+            }); return;
+        }
+        res.status(200).send({
+            success: true,
+            message: "Released Course fetched successfully.",
+            data: courses
+        })
+    }
+    catch (error) {
+        res.status(500).send({
+            message: "Some internal error occurred",
+            error: error.message,
+            success: false
+        });
+    }
+}
 
 const getOneCourseById = async (req, res) => {
     const courseId = req.query.courseId;
@@ -238,7 +261,6 @@ const createCourse = async (req, res, next) => {
 const deleteImageFromCloudinary = async (publicId) => {
     try {
         const result = await cloudinary.uploader.destroy('SkillUp_CourseThumbnail/' + publicId);
-        console.log(result);
         if (result.result === 'ok') {
             return { success: true, message: 'Image deleted successfully.' };
         } else {
@@ -362,6 +384,68 @@ const releaseCourse = async (req, res) => {
     }
 }
 
+const unpublishCourse = async(req, res)=>{
+    const courseId = req.query.courseId;
+    try {
+        const course = await DraftedCourse.findOne({ _id: courseId });
+        course.isReleased = false;
+        await course.save();
+        res.status(200).send({
+            data: "Course unpublished successfully! Now students can't see your created course.",
+            message: "Course unpublished successfully!",
+            success: true,
+        });
+    } catch (error) {
+        res.status(500).send({
+            message: "Some internal error occurred",
+            error: error.message,
+            success: false,
+        })
+    }
+}
+
+const deleteCourse = async(req, res)=>{
+    const courseId = req.query.courseId;
+    try {
+
+        const course = await DraftedCourse.findOne({ _id: courseId });
+        if (!course) {
+            return res.status(404).send({
+                message: "Course not found!",
+                success: false,
+            });
+        }
+
+        const courseModule = await CourseModule.findOne({ courseId: courseId });
+        if (courseModule) {
+            await CourseModule.deleteOne({ courseId: courseId });
+        }
+
+        const deleteResult = await deleteImageFromCloudinary(course.coursePoster.public_id.split('/')[1]);
+        if (!deleteResult.success) {
+            return res.status(500).send({
+                message: "Failed to delete course thumbnail from cloud.",
+                success: false,
+            });
+        }
+
+        await DraftedCourse.deleteOne({ _id: courseId });
+
+        return res.status(200).send({
+            message: "Course deleted successfully!",
+            success: true,
+        });
+
+    } catch (error) {
+        return res.status(500).send({
+            message: "Some internal error occurred",
+            error: error.message,
+            success: false,
+        });
+    }
+
+}
+
 module.exports = {
     getAllCourses,
     getAllCoursesByEdId,
@@ -373,4 +457,7 @@ module.exports = {
     uploadThumbnail,
     deleteUploadedImage,
     releaseCourse,
+    unpublishCourse,
+    getReleaseCourseByEdId,
+    deleteCourse
 }

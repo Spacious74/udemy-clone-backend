@@ -9,7 +9,7 @@ const QueAns = require("../models/QueAns");
 const getCourseDetails = async (req, res, next) => {
   const cId = req.query.courseId;
   try {
-    const course = await Course.findOne({ _id: cId });
+    const course = await Course.findOne({ _id: cId }).populate('educator.edId');
     const reviews = await Review.findOne({ courseId: cId });
     if (!course) {
       res.status(404).send({

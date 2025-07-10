@@ -26,12 +26,15 @@ const draftedCourseSchema = new mongoose.Schema({
     price : Number,
     language : String,
     level : String,
-    totalLectures : Number,
+    totalLectures : {
+        type : Number,
+        default : 0
+    },
 
     educator : {
         edId : {
             type : mongoose.Schema.Types.ObjectId,
-            ref : "Educator"
+            ref : "User"
         },
         edname : {
             type : String,

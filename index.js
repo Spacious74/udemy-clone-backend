@@ -4,6 +4,8 @@ const cloudinary = require('cloudinary').v2;
 const fileUpload = require('express-fileupload');
 const cookieParser = require('cookie-parser');;
 const cors = require("cors");
+const Razorpay = require('razorpay');
+
 // connecting database to Mongo Atlas
 dbconnection();
 
@@ -23,6 +25,11 @@ app.use(cors({
     credentials : true
 }));
 
+const razorpayInstance = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
 
 // importing all routes
 const allRoutes = require("./routes/allroutes")
@@ -34,3 +41,4 @@ app.listen(PORT, ()=>{
     console.log("Server is listening on port : " + PORT);
 });
 
+module.exports = razorpayInstance;

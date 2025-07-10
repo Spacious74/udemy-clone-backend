@@ -30,7 +30,7 @@ const courseSchema = new mongoose.Schema({
     educator : {
         edId : {
             type : mongoose.Schema.Types.ObjectId,
-            ref : "Educator"
+            ref : "User"
         },
         edname : {
             type : String,

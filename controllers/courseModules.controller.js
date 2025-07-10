@@ -2,8 +2,22 @@ const CourseModule = require("../models/CourseModules");
 const Course = require("../models/Course");
 const CustomErrorHandler = require("../utils/customErrorHandler");
 const catchAsyncError = require("../middlewares/catchAsyncError");
+const DraftedCourse = require("../models/DraftedCourse");
 const cloudinary = require("cloudinary").v2;
 
+const updateCourseLectureCount  = async (courseId) => {
+    const courseModule = await CourseModule.findOne({ courseId: courseId });
+    if (!courseModule) {
+        throw new CustomErrorHandler("Course module not found", 404);
+    }
+
+    let totalLectures = 0;
+    courseModule.sectionArr.forEach(section => {
+        totalLectures += section.videos.length;
+    });
+
+    await DraftedCourse.findByIdAndUpdate(courseId, { totalLectures: totalLectures });
+}
 
 const getAllSections = async (req, res) => {
     const courseId = req.query.courseId;
@@ -142,6 +156,7 @@ const addVideoToSection = async (req, res, next) => {
         const sectionIndex = module.sectionArr.findIndex(section => section._id == sectionId);
         module.sectionArr[sectionIndex].videos.push({ name: videoTitle });
         await module.save();
+        await updateCourseLectureCount(courseId);
         res.status(200).send({
             message: "Video uploaded successfully",
             success: true,
@@ -183,6 +198,7 @@ const deleteVideo = async (req, res, next) => {
         }
         module.sectionArr[sectionIndex].videos.pull({ _id: videoId });
         await module.save();
+        await updateCourseLectureCount(courseId);
         res.status(200).send({
             message: "Video deleted successfully!!!",
             success: true,

@@ -24,7 +24,10 @@ const cartSchema = new mongoose.Schema({
       },
       courseName:String,
       coursePrice: Number,
-      educatorName : String
+      educatorName : String,
+      lectures : Number,
+      language : String,
+      level : String
     },
   ],
 
