@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const validator = require('validator');
 
+
 // Creating a user schema to make a model of User using Schema method
 const userSchema = new mongoose.Schema({
     username: {
@@ -42,11 +43,11 @@ const userSchema = new mongoose.Schema({
     },
     coursesCreated: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course'
+        ref: 'DraftedCourse'
     }],
     coursesEnrolled: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course'
+        ref: 'DraftedCourse'
     }],
     progress: [{
         courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },

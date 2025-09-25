@@ -30,17 +30,11 @@ const getAllCourses = async (req, res) => {
             ];
         }
 
-        if (category) {
-            query.category = category;
-        }
+        if (category) query.category = category;
 
-        if (language) {
-            query.language = language;
-        }
+        if (language) query.language = language;
 
-        if (level) {
-            query.level = level;
-        }
+        if (level) query.level = level;
 
         if (min && max) {
             query.price = { $gte: min, $lte: max };

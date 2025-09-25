@@ -68,8 +68,8 @@ const uploadImageToCloudinary = async (req, res) => {
     const file = req.files.file;
     const userId = req.user.uid;
 
-    const user = await User.findById({_id : userId});
-    if(user.profileImage != ''){
+    const user = await User.findById({ _id: userId });
+    if (user.profileImage != '') {
       const publicId = user.profileImage.split('/').pop().split('.')[0];
       const deleteResult = await deleteImageFromCloudinary(publicId);
       if (deleteResult.success) {
@@ -131,7 +131,7 @@ const deleteUploadedImage = async (req, res) => {
     }
 
     const publicId = user.profileImage.split('/').pop().split('.')[0]; // Extract public ID from URL
-    
+
     const deleteResult = await deleteImageFromCloudinary(publicId);
 
     if (deleteResult.success) {
@@ -145,7 +145,7 @@ const deleteUploadedImage = async (req, res) => {
     }
 
   } catch (error) {
-    return res.status(500).json({success: false, message: 'Internal server error.', error: error.message });
+    return res.status(500).json({ success: false, message: 'Internal server error.', error: error.message });
   }
 };
 
@@ -159,7 +159,7 @@ const createUser = async (req, res) => {
   }
 
   try {
-    
+
     const user = await User.findOne({ email: userbody.email });
 
     if (user) {
@@ -210,8 +210,8 @@ const getSessionLogonData = async (req, res) => {
         success: false,
       });
     }
-    const user = await User.findById(userId).select('-password'); // Exclude password
-    const cart = await Cart.findOne({userId : userId});
+    const user = await User.findById(userId).select('-password').populate("coursesEnrolled"); // Exclude password
+    const cart = await Cart.findOne({ userId: userId });
 
     if (!user) {
       return res.status(404).send({
@@ -223,7 +223,7 @@ const getSessionLogonData = async (req, res) => {
     // User details return karo
     res.status(200).send({
       data: user,
-      cart : cart,
+      cart: cart,
       success: true,
     });
 
@@ -240,7 +240,7 @@ const getSessionLogonData = async (req, res) => {
 const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
 
-  
+
   try {
     const user = await User.findOne({ email: email });
     if (!user) {
@@ -267,7 +267,7 @@ const loginUser = async (req, res, next) => {
     return res.status(200).send({
       data: user,
       message: "User Loggined successfully!",
-      success: true, 
+      success: true,
       token,
     });
 
@@ -293,6 +293,41 @@ const logoutUser = async (req, res) => {
   }
 };
 
+const getUserCourseEnrolled = async (req, res) => {
+
+  try {
+    const userId = req.user.uid;
+    if (!userId) {
+      return res.status(404).send({
+        message: "Something went wrong while token authentication. Try again!",
+        success: false,
+      });
+    }
+
+    const user = await User.findById({ _id: userId }).populate('coursesEnrolled');
+    if (!user) {
+      return res.status(404).send({
+        message: "User not found. Please create an account!",
+        success: false,
+      });
+    }
+
+    res.status(200).send({
+      data: user.coursesEnrolled,
+      success: true
+    });
+
+  } catch (error) {
+    res.status(401).send(
+      {
+        message: "Invalid or Expired token provided.",
+        success: false,
+      }
+    );
+  }
+
+}
+
 module.exports = {
   getUserById,
   createUser,
@@ -301,5 +336,6 @@ module.exports = {
   updateUserInfo,
   getSessionLogonData,
   uploadImageToCloudinary,
-  deleteUploadedImage
+  deleteUploadedImage,
+  getUserCourseEnrolled
 };
