@@ -31,9 +31,7 @@ const getAllCourses = async (req, res) => {
         }
 
         if (category) query.category = category;
-
         if (language) query.language = language;
-
         if (level) query.level = level;
 
         if (min && max) {
@@ -45,10 +43,9 @@ const getAllCourses = async (req, res) => {
         }
 
         query.isReleased = true; // Only fetch released courses
-
         totalResults = await DraftedCourse.find(query);
-        let filteredResults = await DraftedCourse.find(query).skip(skip).limit(limit);
 
+        let filteredResults = await DraftedCourse.find(query).skip(skip).limit(limit);
         if (sortedOrder == "lth") {
             filteredResults = await DraftedCourse.find(query).sort({ price: 1 }).skip(skip).limit(limit);
         } else if (sortedOrder == "htl") {
@@ -61,8 +58,7 @@ const getAllCourses = async (req, res) => {
             res.status(400).send({
                 message: "Course not found in database",
                 success: false
-            });
-            return;
+            });return;
         }
         res.status(200).send({
             totalCourses: totalResults.length || 0,
@@ -86,7 +82,7 @@ const getCourseDetails = async (req, res) => {
         const reviews = await Review.findOne({ courseId: cId });
         if (!course) {
             res.status(404).send({
-                message: "Course not found. Something went wrong!",
+                message: "Course not . Something went wrong!",
                 success: false,
             });
         }

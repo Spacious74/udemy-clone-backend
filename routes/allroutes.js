@@ -12,6 +12,7 @@ const reviewRouter = require('./review.route');
 const qaRouter = require('./qa.route');
 const draftedCourseRouter = require("./draftedCourse.route");
 const paymentRouter = require("./payment.route");
+const videoPlayerRoute = require('./videoPlayer.route');
 
 // Using all imported routes through a single route called allRoutes and exporting it to index.js
 allRoutes.use('/skillup/api/v1/course',courseRouter)
@@ -24,7 +25,7 @@ allRoutes.use('/skillup/api/v1/buy', purchaseRouter),
 allRoutes.use('/skillup/api/v1/review', reviewRouter)
 allRoutes.use('/skillup/api/v1/qa', qaRouter);
 allRoutes.use('/skillup/api/v1/payment', paymentRouter);
-
+allRoutes.use('/skillup/api/v1/video-player', videoPlayerRoute);
 
 // Base API route
 allRoutes.use("/skillup/api/v1", (req,res)=>{

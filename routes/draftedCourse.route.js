@@ -21,6 +21,4 @@ draftedCourseRouter.post('/release-course', controller.releaseCourse);
 draftedCourseRouter.delete('/remove-thumbnail', controller.deleteUploadedImage);
 draftedCourseRouter.delete('/delete-course', controller.deleteCourse);
 
-
-
 module.exports = draftedCourseRouter;
