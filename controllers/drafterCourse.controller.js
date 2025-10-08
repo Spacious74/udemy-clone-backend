@@ -58,7 +58,7 @@ const getAllCourses = async (req, res) => {
             res.status(400).send({
                 message: "Course not found in database",
                 success: false
-            });return;
+            }); return;
         }
         res.status(200).send({
             totalCourses: totalResults.length || 0,
@@ -88,9 +88,9 @@ const getCourseDetails = async (req, res) => {
         }
         res.status(200).send({
             message: "Course details fetched successfully",
+            success: true,
             course,
-            reviews,
-            success: true
+            reviews
         });
     } catch (error) {
         res.status(500).send({
@@ -199,6 +199,39 @@ const getCourseByEdIdAndCourseId = async (req, res) => {
         res.status(500).send({
             message: "Some internal error occurred",
             error: error.message,
+            success: false
+        });
+    }
+}
+
+const getCourseAndPlaylist = async (req, res) => {
+    const courseId = req.query.courseId;
+    try {
+        const course = await DraftedCourse.findOne({ _id: courseId }).populate('educator.edId', 'username profileImage');
+        if (!course) {
+            res.status(500).send({
+                message: "Course not found!",
+            }); return;
+        }
+
+        const courseModules = await CourseModule.findOne({ courseId: courseId });
+        if (!courseModules) {
+            res.status(500).send({
+                message: "Course Modules not found for this course!",
+            }); return;
+        }
+
+        res.status(200).send({
+            message: "Course Sections fetched successfully",
+            success: true,
+            course: course,
+            modules: courseModules.sectionArr
+        })
+
+    } catch (err) {
+        res.status(500).send({
+            message: "Some iternal error occurred",
+            error: err.message,
             success: false
         });
     }
@@ -374,7 +407,7 @@ const releaseCourse = async (req, res) => {
     }
 }
 
-const unpublishCourse = async(req, res)=>{
+const unpublishCourse = async (req, res) => {
     const courseId = req.query.courseId;
     try {
         const course = await DraftedCourse.findOne({ _id: courseId });
@@ -394,7 +427,7 @@ const unpublishCourse = async(req, res)=>{
     }
 }
 
-const deleteCourse = async(req, res)=>{
+const deleteCourse = async (req, res) => {
     const courseId = req.query.courseId;
     try {
 
@@ -449,5 +482,6 @@ module.exports = {
     releaseCourse,
     unpublishCourse,
     getReleaseCourseByEdId,
+    getCourseAndPlaylist,
     deleteCourse
 }

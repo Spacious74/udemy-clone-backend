@@ -12,10 +12,6 @@ const courseModuleSchema = new mongoose.Schema({
                 public_id : String,
                 url : String,
                 name : String,
-                completed : {
-                    type : Boolean,
-                    default : false
-                },
                 position : Number
             }]
         }

@@ -12,6 +12,7 @@ draftedCourseRouter.get('/getAllCourses', controller.getAllCourses);
 draftedCourseRouter.get('/getCourseDetailsById', controller.getCourseDetails);
 draftedCourseRouter.get('/courseById', controller.getOneCourseById);
 draftedCourseRouter.get('/getByCourseAndEducatorId', controller.getCourseByEdIdAndCourseId);
+draftedCourseRouter.get('/getCourseAndPlaylist', controller.getCourseAndPlaylist);
 
 draftedCourseRouter.post('/create', controller.createCourse);
 draftedCourseRouter.post('/update', controller.updateCourse);
