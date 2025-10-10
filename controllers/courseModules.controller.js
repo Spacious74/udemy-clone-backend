@@ -1,5 +1,4 @@
 const CourseModule = require("../models/CourseModules");
-const Course = require("../models/Course");
 const CustomErrorHandler = require("../utils/customErrorHandler");
 const catchAsyncError = require("../middlewares/catchAsyncError");
 const DraftedCourse = require("../models/DraftedCourse");

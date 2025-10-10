@@ -4,6 +4,8 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const Cart = require('../models/Cart');
 const DraftedCourse = require('../models/DraftedCourse');
+const UserProgress = require('../models/UserProgress');
+const CourseModule = require('../models/CourseModules');
 
 const razorpayInstance = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -138,17 +140,49 @@ const singlePaymentVerification = async (req, res) => {
         const expectedSign = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET).update(sign.toString()).digest("hex");
         if (expectedSign === razorpay_signature) {
 
-            let payment = await Payment.findOne({orderId : razorpay_order_id});
+            let payment = await Payment.findOne({ orderId: razorpay_order_id });
             payment.paymentStatus = 'paid';
             await payment.save();
 
-            let user = await User.findOne({_id : userId});
+            let user = await User.findOne({ _id: userId });
             user.coursesEnrolled.push(courseId);
             await user.save();
 
-            let course = await DraftedCourse.findOne({_id : courseId});
-            course.totalStudentsPurchased +=1;
+            let course = await DraftedCourse.findOne({ _id: courseId });
+            course.totalStudentsPurchased += 1;
             await course.save();
+
+            let existingProgress = await UserProgress.findOne({ userId, courseId });
+            if (!existingProgress) {
+                const courseModule = await CourseModule.findOne({ courseId });
+                if (!courseModule) {
+                    res.status(500).send({
+                        success: false,
+                        message: "Course Module not found for this course"
+                    }); return;
+                }
+
+                const sectionArr = courseModule.sectionArr.map(section => ({
+                    sectionName: section.sectionName,
+                    videos: section.videos.map(video => ({
+                        public_id: video.public_id,
+                        url: video.url,
+                        name: video.name,
+                        position: video.position,
+                        completed: false
+                    }))
+                }));
+
+                const firstVideoId = sectionArr[0]?.videos[0]?._id || null;
+
+                await UserProgress.create({
+                    userId,
+                    courseId,
+                    lastWatchedVideo: firstVideoId,
+                    sectionArr
+                });
+
+            }
 
             res.status(200).send({ success: true, message: "Payment done successfully! Please check your learning tab." });
 
@@ -173,19 +207,19 @@ const cartPaymentVerification = async (req, res) => {
         const expectedSign = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET).update(sign.toString()).digest("hex");
         if (expectedSign === razorpay_signature) {
 
-            let payment = await Payment.findOne({orderId : razorpay_order_id});
+            let payment = await Payment.findOne({ orderId: razorpay_order_id });
             payment.paymentStatus = 'paid';
             await payment.save();
 
-            let user = await User.findOne({_id : userId});
+            let user = await User.findOne({ _id: userId });
             user.coursesEnrolled.push(...courseIds);
             await user.save();
 
-            let cart = await Cart.findOne({userId : userId});
+            let cart = await Cart.findOne({ userId: userId });
             cart.cartItems = [];
             await cart.save();
 
-            res.status(200).send({ success: true, message: "Payment done successfully! Please check your learning tab." });
+            res.status(200).send({ success: true, message: "Payment successful! Course enrolled and progress initialized." });
 
         } else {
             res.status(400).send({ success: false, message: "Invalid signature" });

@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const courseModuleSchema = new mongoose.Schema({
     courseId : {
         type : mongoose.Schema.Types.ObjectId,
-        ref : "Course"
+        ref : "DraftedCourse"
     },
     sectionArr : [
         {
@@ -12,7 +12,11 @@ const courseModuleSchema = new mongoose.Schema({
                 public_id : String,
                 url : String,
                 name : String,
-                position : Number
+                position : Number,
+                completed : {
+                    type : Boolean,
+                    default : false
+                }
             }]
         }
     ],
