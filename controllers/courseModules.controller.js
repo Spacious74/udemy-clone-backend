@@ -294,6 +294,7 @@ const updateVideoFile = async (req, res) => {
                 });
             }
         }
+        
         module.sectionArr[sectionIndex].videos[videoIndex].public_id = public_id;
         module.sectionArr[sectionIndex].videos[videoIndex].url = url;
         await module.save();
