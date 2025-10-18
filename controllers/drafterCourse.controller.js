@@ -94,7 +94,7 @@ const getCourseDetails = async (req, res) => {
         });
     } catch (error) {
         res.status(500).send({
-            message: "Some internal error occurred",``
+            message: "Some internal error occurred",
             error: error.message,
             success: false
         });
