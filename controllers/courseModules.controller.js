@@ -314,6 +314,44 @@ const updateVideoFile = async (req, res) => {
     }
 }
 
+const getVideoFile = async (req, res)=>{
+    try {
+        const {courseId, sectionId, videoId} = req.query;
+        const courseModule = await CourseModule.findOne({courseId});
+        console.log(courseModule);
+
+        let section = courseModule.sectionArr.find((dt)=>dt._id == sectionId)
+
+         if(!section){
+            return res.status(400).send({
+                success : false,
+                message : "Section not found! Please Report to the lecturer"
+            })
+        }
+
+        let videoObj = section.videos.find((dt)=>dt._id == videoId);
+
+        if(!videoObj){
+            return res.status(400).send({
+                success : false,
+                message : "Video not found! Please Report to the lecturer"
+            })
+        }
+
+        res.status(200).send({
+            success : true,
+            video : videoObj
+        })
+        
+    } catch (error) {
+        res.status(500).send({
+            message: "Some iternal error occurred!",
+            error: error.message,
+            success: false
+        });
+    }
+}
+
 module.exports = {
     addSection,
     deleteSection,
@@ -323,5 +361,6 @@ module.exports = {
     updateVideoTitle,
     deleteVideo,
     addVideoFile,
-    updateVideoFile
+    updateVideoFile,
+    getVideoFile
 }

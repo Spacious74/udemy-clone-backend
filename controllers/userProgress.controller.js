@@ -1,5 +1,6 @@
 const UserProgress = require('../models/UserProgress.js');
 const CourseModule = require('../models/CourseModules.js');
+const DraftedCourse = require('../models/DraftedCourse.js');
 
 const createUserProgress = async (req, res) => {
 
@@ -64,19 +65,21 @@ const createUserProgress = async (req, res) => {
 
 const getUserProgress = async (req, res) => {
     try {
-        const { userId, courseId } = req.params;
+        const { userId, courseId } = req.query;
 
-        const progress = await UserProgress.findOne({ userId, courseId });
-        if (!progress) {
+        const playlist = await UserProgress.findOne({ userId, courseId });
+        const course = await DraftedCourse.findOne({_id : courseId});
+        if (!playlist) {
             return res.status(404).json({
                 success: false,
-                message: "No progress found for this course"
+                message: "Progress not found for this course"
             });
         }
 
         res.status(200).json({
             success: true,
-            progress
+            playlist,
+            course
         });
     } catch (error) {
         res.status(500).json({
@@ -138,6 +141,11 @@ const updateProgress = async (req, res) => {
             error: error.message
         });
     }
+}
+
+
+const updateCurrentWatchingLecture = async(req, res)=>{
+
 }
 
 module.exports = {

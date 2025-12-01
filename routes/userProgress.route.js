@@ -6,6 +6,6 @@ progressRouter.get('/', controller.getUserProgress);
 
 progressRouter.post('/update', controller.updateProgress);
 
-progressRouter.post('/add', controller.createUserProgress);
+// progressRouter.post('/add', controller.createUserProgress);
 
 module.exports = progressRouter;

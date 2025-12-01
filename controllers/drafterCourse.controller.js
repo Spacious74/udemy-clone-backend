@@ -82,7 +82,7 @@ const getCourseDetails = async (req, res) => {
         const reviews = await Review.findOne({ courseId: cId });
         if (!course) {
             res.status(404).send({
-                message: "Course not . Something went wrong!",
+                message: "Course not found. Something went wrong!",
                 success: false,
             });
         }

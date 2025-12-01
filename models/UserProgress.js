@@ -14,19 +14,18 @@ const userProgressSchema = new mongoose.Schema(
       required: true
     },
 
-    lastWatchedVideo: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: false
-    },
+    lastWatchedVideo:String,
 
     sectionArr: [
       {
+        sectionId : String,
         sectionName: {
           type: String,
           required: true
         },
         videos: [
           {
+            videoId : String,
             public_id: String,
             url: String,
             name: String,

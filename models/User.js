@@ -49,11 +49,6 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'DraftedCourse'
     }],
-    progress: [{
-        courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
-        completedLectures: { type: Number, default: 0 },
-        totalLectures: { type: Number }
-    }],
     socialLinks: {
         linkedin: { type: String, trim: true, default: '' },
         portfolio: { type: String, trim: true, default: '' },
