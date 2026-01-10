@@ -66,20 +66,16 @@ const createUserProgress = async (req, res) => {
 const getUserProgress = async (req, res) => {
     try {
         const { userId, courseId } = req.query;
-
-        const playlist = await UserProgress.findOne({ userId, courseId });
-        const course = await DraftedCourse.findOne({_id : courseId});
-        if (!playlist) {
+        const videosProgress = await UserProgress.findOne({ userId, courseId });
+        if (!videosProgress) {
             return res.status(404).json({
                 success: false,
                 message: "Progress not found for this course"
             });
         }
-
         res.status(200).json({
             success: true,
-            playlist,
-            course
+            videosProgress,
         });
     } catch (error) {
         res.status(500).json({
@@ -144,7 +140,50 @@ const updateProgress = async (req, res) => {
 }
 
 
-const updateCurrentWatchingLecture = async(req, res)=>{
+const playNextVideo = async (req, res) => {
+    // Meaning : Next video ka data bhejo, 1. sabse phle current watching video object nikalo, unke indexes uthao
+    // - phle check karo globalIdx == totalFlattened array ke to course complete
+    // - flattened array ke current globalIdx+1 ka obj send kar do.
+    // - globalIdx update kar do
+
+    const { progressId } = req.query;
+    try {
+        const userProgress = await UserProgress.findOne({ _id: progressId });
+        const allVideos = userProgress.sectionArr.flatMap(section => section.videos);
+
+        let currentVideoIdx = userProgress.currentWatchingVideo.globalVideoIdx
+        if (currentVideoIdx == allVideos.length - 1) {
+            return res.status(200).send({
+                success: true,
+                message: "You've completed the course",
+                currentWatchingVideo: null
+            })
+        }
+
+        userProgress.currentWatchingVideo = {
+            videoId: allVideos[currentVideoIdx + 1].videoId,
+            videoTitle: allVideos[currentVideoIdx + 1].name,
+            videoUrl: allVideos[currentVideoIdx + 1].url,
+            videoPublic_Id: allVideos[currentVideoIdx + 1].public_id,
+            globalVideoIdx: currentVideoIdx + 1
+        }
+
+        await userProgress.save();
+
+        res.status(200).send({
+            success: true,
+            message: "Video Fetched Successfully.",
+            currentWatchingVideo: userProgress.currentWatchingVideo
+        })
+
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
 
 }
 

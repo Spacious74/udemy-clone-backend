@@ -163,24 +163,30 @@ const singlePaymentVerification = async (req, res) => {
                 }
 
                 const sectionArr = courseModule.sectionArr.map(section => ({
-                    sectionId : section._id,
+                    sectionId: section._id,
                     sectionName: section.sectionName,
                     videos: section.videos.map(video => ({
-                        videoId : video._id,
+                        videoId: video._id,
                         public_id: video.public_id,
                         url: video.url,
                         name: video.name,
-                        position: video.position, 
+                        position: video.position,
                         completed: false
                     }))
                 }));
 
-                const firstVideoUrl = sectionArr[0]?.videos[0]?.url || null;
+                const vObj = sectionArr[0]?.videos[0];
+                const currentWatchingVideo = {
+                    videoId: vObj.videoId,
+                    videoTitle: vObj.name,
+                    videoUrl: vObj.url,
+                    videoPublic_Id: vObj.public_id,
+                }
 
                 await UserProgress.create({
                     userId,
                     courseId,
-                    lastWatchedVideo: firstVideoUrl,
+                    currentWatchingVideo,
                     sectionArr
                 });
 
