@@ -139,6 +139,61 @@ const updateProgress = async (req, res) => {
     }
 }
 
+const getVideoDirectly = async (req, res) => {
+    const { userId, courseId, currentVideoId, reqVideoId, percentage } = req.query;
+    try {
+        const userProgress = await UserProgress.findOne({ userId: userId, courseId: courseId });
+        const courseModule = await CourseModule.findOne({ courseId: courseId });
+        const allVideosFlat = courseModule.sectionArr.flatMap(section => section.videos);
+        const videoObj = allVideosFlat.find(video => video._id.toString() == reqVideoId);
+        const resVideoIndex = allVideosFlat.findIndex(video => video._id.toString() === reqVideoId);
+        userProgress.currentWatchingVideo = {
+            videoId: videoObj._id,
+            videoTitle: videoObj.name,
+            videoUrl: videoObj.url,
+            videoPublic_Id: videoObj.public_id,
+            globalVideoIdx: resVideoIndex
+        }
+
+        let videoSet = new Set(userProgress.videosCompleted);
+        if (percentage > 90 && !videoSet.has(currentVideoId.trim())) {
+            userProgress.videosCompleted.push(currentVideoId.trim());
+        }
+
+        await userProgress.save();
+
+        res.status(200).send({
+            success: true,
+            videosProgress: userProgress
+        });
+
+    } catch (err) {
+        res.status(500).send({
+            success: false,
+            message: "Internal server error",
+            error: err.message
+        });
+    }
+}
+
+const markVideoComplete = async (req, res) => {
+    const { userId, courseId, currentVideoId } = req.query;
+    try {
+        const userProgress = await UserProgress.findOne({ userId: userId, courseId: courseId });
+        userProgress.videosCompleted.push(currentVideoId.trim());
+        await userProgress.save();
+        res.status(200).send({
+            success: true,
+            videosProgress: userProgress
+        });
+    } catch (err) {
+        res.status(500).send({
+            success: false,
+            message: "Internal server error",
+            error: err.message
+        });
+    }
+}
 
 const playNextVideo = async (req, res) => {
     // Meaning : Next video ka data bhejo, 1. sabse phle current watching video object nikalo, unke indexes uthao
@@ -190,5 +245,7 @@ const playNextVideo = async (req, res) => {
 module.exports = {
     getUserProgress,
     createUserProgress,
-    updateProgress
+    updateProgress,
+    getVideoDirectly,
+    markVideoComplete
 }

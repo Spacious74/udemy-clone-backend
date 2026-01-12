@@ -162,22 +162,11 @@ const singlePaymentVerification = async (req, res) => {
                     }); return;
                 }
 
-                const sectionArr = courseModule.sectionArr.map(section => ({
-                    sectionId: section._id,
-                    sectionName: section.sectionName,
-                    videos: section.videos.map(video => ({
-                        videoId: video._id,
-                        public_id: video.public_id,
-                        url: video.url,
-                        name: video.name,
-                        position: video.position,
-                        completed: false
-                    }))
-                }));
-
+                const sectionArr = courseModule.sectionArr;
                 const vObj = sectionArr[0]?.videos[0];
+
                 const currentWatchingVideo = {
-                    videoId: vObj.videoId,
+                    videoId: vObj._id,
                     videoTitle: vObj.name,
                     videoUrl: vObj.url,
                     videoPublic_Id: vObj.public_id,
@@ -186,8 +175,7 @@ const singlePaymentVerification = async (req, res) => {
                 await UserProgress.create({
                     userId,
                     courseId,
-                    currentWatchingVideo,
-                    sectionArr
+                    currentWatchingVideo
                 });
 
             }
