@@ -140,18 +140,22 @@ const singlePaymentVerification = async (req, res) => {
         const expectedSign = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET).update(sign.toString()).digest("hex");
         if (expectedSign === razorpay_signature) {
 
+            // For payment record
             let payment = await Payment.findOne({ orderId: razorpay_order_id });
             payment.paymentStatus = 'paid';
             await payment.save();
 
+            // For saving courses enrolled by the user in their profile
             let user = await User.findOne({ _id: userId });
             user.coursesEnrolled.push(courseId);
             await user.save();
 
+            // Increasing no. of students purchase of a course
             let course = await DraftedCourse.findOne({ _id: courseId });
             course.totalStudentsPurchased += 1;
             await course.save();
 
+            // Now adding first videos data to the user progress's current Watching video because by default it's always first video
             let existingProgress = await UserProgress.findOne({ userId, courseId });
             if (!existingProgress) {
                 const courseModule = await CourseModule.findOne({ courseId });

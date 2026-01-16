@@ -1,3 +1,5 @@
+const express = require("express");
+const path = require("path");
 const {app, dbconnection} = require("./connections");
 const PORT = process.env.PORT || 8080;
 const cloudinary = require('cloudinary').v2;
@@ -26,6 +28,12 @@ app.use(cors({
 
 // importing all routes
 const allRoutes = require("./routes/allroutes")
+
+app.use(
+  "/certificates",
+  express.static(path.join(process.cwd(), "public", "certificates"))
+);
+
 app.use(allRoutes);
 
 

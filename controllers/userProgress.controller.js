@@ -160,6 +160,10 @@ const getVideoDirectly = async (req, res) => {
             userProgress.videosCompleted.push(currentVideoId.trim());
         }
 
+        if(userProgress.videosCompleted.length == allVideosFlat.length){
+            userProgress.courseCompletionStatus = true;
+        }
+
         await userProgress.save();
 
         res.status(200).send({
@@ -180,7 +184,11 @@ const markVideoComplete = async (req, res) => {
     const { userId, courseId, currentVideoId } = req.query;
     try {
         const userProgress = await UserProgress.findOne({ userId: userId, courseId: courseId });
+        const course = await DraftedCourse.findOne({_id : courseId});
         userProgress.videosCompleted.push(currentVideoId.trim());
+        if(userProgress.videosCompleted.length == course.totalLectures){
+            userProgress.courseCompletionStatus = true;
+        }
         await userProgress.save();
         res.status(200).send({
             success: true,

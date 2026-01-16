@@ -29,6 +29,8 @@ const userProgressSchema = new mongoose.Schema(
       { type : String }
     ],
 
+    courseCompletionStatus : Boolean,
+
     startedAt: {
       type: Date,
       default: Date.now

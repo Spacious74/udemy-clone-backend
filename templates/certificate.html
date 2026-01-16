@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Certificate</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            
+        }
+
+        .certificate {
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+            border: 20px solid #111111;
+            padding: 24px;
+            position: relative;
+        }
+
+        .cert-inner {
+            border: solid 3px #111111;
+            z-index: 10;
+            background-color: #ffffff;
+            background: radial-gradient(circle, transparent 20%, #ffffff 20%, #ffffff 80%, transparent 80%, transparent), 
+            radial-gradient(circle, transparent 20%, #ffffff 20%, #ffffff 80%, transparent 80%, transparent) 25px 25px, 
+            linear-gradient(#dfe6e3 2px, transparent 2px) 0 -1px, linear-gradient(90deg, #dfe6e3 2px, #ffffff 2px) -1px 0;
+            background-size: 50px 50px, 50px 50px, 25px 25px, 25px 25px;
+        }
+
+        .main-heading {
+            font-family: serif;
+            text-align: center;
+            margin-top: 0px;
+            margin-bottom: 30px;
+        }
+
+        .main-heading .lg-txt {
+            font-size: 3.5rem;
+            font-weight: bold;
+        }
+
+        .main-heading .sm-txt {
+            font-size: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        .sub-txt {
+            font-family: sans-serif;
+            text-align: center;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+        }
+
+        .username {
+            font-size: 1.5rem;
+            text-align: center;
+            font-family: sans-serif;
+            font-weight: bolder;
+            margin-bottom: 10px;
+        }
+
+        .line-cont {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .name_line {
+            width: 30%;
+            background-color: #000;
+            height: 2px;
+        }
+
+        .courseName {
+            font-size: 1.3rem;
+            text-align: center;
+            font-family: sans-serif;
+            font-weight: bold;
+            margin-top: 30px;
+        }
+
+        .instructor {
+            font-family: sans-serif;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .date {
+            font-family: sans-serif;
+            font-weight: bold;
+            text-align: center;
+            margin: 40px 0px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header .logo {
+            font-family: sans-serif;
+            font-weight: 900;
+            font-size: 2rem;
+            padding: 20px;
+            margin-top: 20px;
+            color: #00ac72;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="certificate">
+        <div class="cert-inner">
+            <div class="header">
+                <span class="logo">Skill Up.</span>
+            </div>
+            <div class="main-heading">
+                <div class="lg-txt">
+                    🎖 Certificate of Completion 🎖
+                </div>
+            </div>
+            <div class="sub-txt">This certificate is awarded to :</div>
+            <div class="username">{{USER_NAME}}</div>
+            <div class="line-cont">
+                <div class="name_line"></div>
+            </div>
+            <div class="sub-txt">For successfull completion of Course</div>
+            <div class="courseName">{{COURSE_NAME}}</div>
+            <div class="instructor">Instructor : {{INSTRUCTOR_NAME}}</div>
+            <div class="date">
+                Date : {{DATE}}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
