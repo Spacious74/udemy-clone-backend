@@ -154,7 +154,7 @@ const getCart = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(error.status).send({
+    res.status(500).send({
       message : "Some internal error occurred!",
       error : error.message,
       success : true

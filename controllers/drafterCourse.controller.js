@@ -225,7 +225,7 @@ const getCourseAndPlaylist = async (req, res) => {
             message: "Course Sections fetched successfully",
             success: true,
             course: course,
-            sectionArr: courseModules.sectionArr
+            sectionArr: courseModules.sectionArr,
         })
 
     } catch (err) {
