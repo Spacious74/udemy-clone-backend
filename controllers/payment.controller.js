@@ -1,4 +1,5 @@
 const Payment = require('../models/Payment');
+const mongoose = require('mongoose');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const User = require('../models/User');
@@ -202,33 +203,87 @@ const singlePaymentVerification = async (req, res) => {
 const cartPaymentVerification = async (req, res) => {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId, courseIds } = req.body;
+
     try {
+        // 1️⃣ Razorpay signature verify
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
-        const expectedSign = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET).update(sign.toString()).digest("hex");
-        if (expectedSign === razorpay_signature) {
+        const expectedSign = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+            .update(sign)
+            .digest("hex");
 
-            let payment = await Payment.findOne({ orderId: razorpay_order_id });
-            payment.paymentStatus = 'paid';
-            await payment.save();
-
-            let user = await User.findOne({ _id: userId });
-            user.coursesEnrolled.push(...courseIds);
-            await user.save();
-
-            let cart = await Cart.findOne({ userId: userId });
-            cart.cartItems = [];
-            await cart.save();
-
-            res.status(200).send({ success: true, message: "Payment successful! Course enrolled and progress initialized." });
-
-        } else {
-            res.status(400).send({ success: false, message: "Invalid signature" });
+        if (expectedSign !== razorpay_signature) {
+            return res.status(400).json({ success: false, message: "Invalid signature" });
         }
+
+        // 2️⃣ Payment idempotency check
+        const payment = await Payment.findOne({ orderId: razorpay_order_id });
+        if (!payment || payment.paymentStatus === 'paid') {
+            return res.status(200).json({
+                success: true,
+                message: "Payment already processed"
+            });
+        }
+
+        payment.paymentStatus = 'paid';
+        await payment.save();
+
+        // 3️⃣ Fetch user once
+        const user = await User.findById(userId).select('coursesEnrolled');
+        const alreadyEnrolled = user.coursesEnrolled.map(id => id.toString());
+
+        // 4️⃣ Filter only NEW courses
+        const newCourseIds = courseIds.filter(
+            id => !alreadyEnrolled.includes(id.toString())
+        );
+
+        // 5️⃣ Add courses to user
+        if (newCourseIds.length) {
+            await User.updateOne(
+                { _id: userId },
+                { $addToSet: { coursesEnrolled: { $each: newCourseIds } } }
+            );
+        }
+
+        // 6️⃣ Increment students count (only for new courses)
+        await DraftedCourse.updateMany(
+            { _id: { $in: newCourseIds } },
+            { $inc: { totalStudentsPurchased: 1 } }
+        );
+
+        // 7️⃣ Create UserProgress safely (per course)
+        for (const courseId of newCourseIds) {
+            const exists = await UserProgress.findOne({ userId, courseId });
+            if (exists) continue;
+
+            const module = await CourseModule.findOne({ courseId });
+            if (!module) continue;
+
+            const firstVideo = module.sectionArr?.[0]?.videos?.[0];
+            if (!firstVideo) continue;
+
+            await UserProgress.create({
+                userId,
+                courseId,
+                currentWatchingVideo: {
+                    videoId: firstVideo._id,
+                    videoTitle: firstVideo.name,
+                    videoUrl: firstVideo.url,
+                    videoPublic_Id: firstVideo.public_id
+                }
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Payment successful. Courses added safely."
+        });
+
     } catch (error) {
-        res.status(500).send({
-            message: "Some internal error occurred while verifying the payment!",
-            error: error.message,
-            success: false
+        res.status(500).json({
+            success: false,
+            message: "Error while verifying cart payment",
+            error: error.message
         });
     }
 

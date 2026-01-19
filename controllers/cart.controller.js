@@ -1,6 +1,7 @@
 const Cart = require("../models/Cart");
 const Course = require("../models/Course");
 const DraftedCourse = require("../models/DraftedCourse");
+const User = require('../models/User');
 
 const addToCart = async (req, res) => {
   
@@ -138,6 +139,14 @@ const getCart = async (req, res) => {
   const userId = req.query.userId;
   try {
     const cart = await Cart.findOne({ userId: userId });
+    const user = await User.findOne({_id : userId});
+
+    let enrolledStringIds = user.coursesEnrolled.map(item => item.toString());
+    const enrolledCourseSet = new Set(enrolledStringIds);
+    const filteredCart = cart.cartItems.filter((item)=>{
+      return !enrolledCourseSet.has(item.courseId.toString());
+    });
+
     if(!cart){
       return res.status(404).send({
         message : "Cart not found! Please login again!",
@@ -146,8 +155,10 @@ const getCart = async (req, res) => {
       })
     }
 
+    cart.cartItems = filteredCart;
+
     res.status(200).send({
-      cartItemsLength: cart.cartItems.length,
+      cartItemsLength: filteredCart.length,
       cart,
       message : "Cart data fetched successfully!",
       success : true
