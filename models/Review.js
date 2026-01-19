@@ -6,6 +6,10 @@ const reviewSchema = new mongoose.Schema({
     ref: "Course",
     required: true,
   },
+  overallRating : {
+    type : Number, 
+    default : 0
+  },
   reviewArr: [
     {
     userId : mongoose.Schema.Types.ObjectId,

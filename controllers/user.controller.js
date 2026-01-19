@@ -33,7 +33,7 @@ const getUserById = async (req, res) => {
 
 const updateUserInfo = async (req, res) => {
   const userData = req.body;
-  console.log(userData);
+  
   try {
     const user = await User.findOne({ _id: userData.userId });
     if (!user) {
