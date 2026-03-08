@@ -15,12 +15,14 @@ const getAllCourses = async (req, res) => {
     const max = Number(req.query.max);
     const sortedOrder = req.query.sortOrder;
     const category = req.query.category;
+
     const language = req.query.language;
     const level = req.query.level;
     const searchText = req.query.searchText;
 
     try {
         let query = {};
+        
 
         if (searchText) {
             query.$or = [

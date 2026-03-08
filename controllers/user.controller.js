@@ -181,7 +181,7 @@ const createUser = async (req, res) => {
     });
 
     const token = jwt.sign(
-      { uid: userCreated._id, email: userCreated.email }, process.env.SECRET_KEY, { expiresIn: "1d" }
+      { uid: userCreated._id, email: userCreated.email, role : userCreated.role }, process.env.SECRET_KEY, { expiresIn: "1d" }
     );
 
     res.status(201).send({
@@ -239,8 +239,6 @@ const getSessionLogonData = async (req, res) => {
 
 const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
-
-
   try {
     const user = await User.findOne({ email: email });
     if (!user) {
@@ -259,7 +257,7 @@ const loginUser = async (req, res, next) => {
     }
 
     const token = jwt.sign(
-      { uid: user._id, email: user.email },
+      { uid: user._id, email: user.email, role : user.role },
       process.env.SECRET_KEY,
       { expiresIn: "1d" }
     );

@@ -11,8 +11,13 @@ const getReviews = async (req, res) => {
   try {
     const review = await Review.findOne({ courseId: courseId });
     
-    let userReview = review.reviewArr.find((dt)=>dt.userId == userId);
-    if(!userReview) userReview = null;
+    let userReview;
+    if(userId){
+      userReview = review.reviewArr.find((dt)=>dt.userId == userId);
+      if(!userReview) userReview = null;
+    }else{
+      userReview = null;
+    }
 
     res.status(200).send({
       success: true,

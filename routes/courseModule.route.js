@@ -13,10 +13,7 @@ moduleRouter.put('/updateVideoTitle', controller.updateVideoTitle);
 moduleRouter.put('/updateVideoFile', controller.updateVideoFile);
 moduleRouter.put('/addVideoFile', controller.addVideoFile);
 
-
 moduleRouter.delete("/delete", controller.deleteSection);
 moduleRouter.delete('/deletevideo', controller.deleteVideo);
-
-
 
 module.exports = moduleRouter
