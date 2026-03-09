@@ -62,6 +62,31 @@ const generateCertificate = async (req, res) => {
 
 };
 
+const getAllCertificatesByUserId = async (req, res) => {
+
+    const {userId} = req.query;
+
+    try{
+
+        const certificates = await Certificate.find({ userId });
+
+        res.status(200).send({
+            success: true,
+            certificates
+        });
+
+    }catch(err){
+        res.status(500).send({
+            success: false,
+            message: "Internal server error",
+            error: err.message
+        });
+    }
+
+}
+
+
 module.exports = {
-    generateCertificate
+    generateCertificate,
+    getAllCertificatesByUserId
 }
