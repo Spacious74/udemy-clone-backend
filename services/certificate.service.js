@@ -27,16 +27,29 @@ const generateCertificatePDF = async (data) => {
 
   await page.setContent(html, { waitUntil: "networkidle0" });
 
+  await page.setViewport({
+    width: 1123,
+    height: 794
+  });
+
+  // PDF
   const pdfBuffer = await page.pdf({
     format: "A4",
     landscape: true,
     printBackground: true
   });
 
+  // PNG preview
+  const pngBuffer = await page.screenshot({
+    type: "png",
+    fullPage: false,
+    omitBackground: true
+  });
+
   await browser.close();
 
-  // 3️⃣ Upload buffer directly to Cloudinary
-  const uploadResult = await new Promise((resolve, reject) => {
+   // Upload PDF
+  const pdfUpload = await new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         resource_type: "raw",
@@ -52,8 +65,29 @@ const generateCertificatePDF = async (data) => {
     streamifier.createReadStream(pdfBuffer).pipe(uploadStream);
   });
 
+
+   // Upload PNG
+  const pngUpload = await new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: "image",
+        folder: "certificates",
+        public_id: data.certificateId + "-preview"
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+
+    streamifier.createReadStream(pngBuffer).pipe(uploadStream);
+  });
+
   // 4️⃣ Return Cloud URL
-  return uploadResult.secure_url;
+   return {
+    pdfUrl: pdfUpload.secure_url,
+    pngUrl: pngUpload.secure_url
+  };
 };
 
 module.exports = {

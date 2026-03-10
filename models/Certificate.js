@@ -16,6 +16,8 @@ const certificateSchema = new mongoose.Schema({
 
     pdfUrl: { type: String, required: true},
 
+    pngUrl: String,
+
     verificationUrl: { type: String, required: true },
 
     issuedAt: { type: Date, default: Date.now, immutable: true },

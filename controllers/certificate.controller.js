@@ -24,12 +24,13 @@ const generateCertificate = async (req, res) => {
         if (existingCert) {
             return res.status(200).send({
                 success: true,
-                pdfUrl: existingCert.pdfUrl
+                pdfUrl: existingCert.pdfUrl,
+                pngUrl : existingCert.pngUrl
             });
         }
 
         const certificateId = "CERT-" + Date.now();
-        const pdfPath = await generateCertificatePDF({
+        const files = await generateCertificatePDF({
             userName: user.username,
             courseName: course.title,
             instructorName: course.educator.edname,
@@ -43,13 +44,15 @@ const generateCertificate = async (req, res) => {
             courseId: course._id,
             courseName: course.title,
             instructorName: course.educator.edname,
-            pdfUrl: pdfPath,
-            verificationUrl : pdfPath,
+            pdfUrl: files.pdfUrl,
+            pngUrl: files.pngUrl,
+            verificationUrl : files.pdfUrl,
         });
 
         res.status(200).send({
             success: true,
-            pdfUrl: pdfPath
+            pdfUrl: files.pdfUrl,
+            pngUrl: files.pngUrl
         });
 
     } catch (err) {
