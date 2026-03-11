@@ -28,8 +28,8 @@ const generateCertificatePDF = async (data) => {
   await page.setContent(html, { waitUntil: "networkidle0" });
 
   await page.setViewport({
-    width: 1123,
-    height: 794
+    width: 1100,
+    height: 700
   });
 
   // PDF
