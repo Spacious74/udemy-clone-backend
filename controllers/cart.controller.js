@@ -50,6 +50,7 @@ const addToCart = async (req, res) => {
 
     res.status(200).send({
       message: "Course added to your cart successfully!",
+      cartItemsLength : cart.cartItems.length,
       success: true,
     });
     

@@ -22,7 +22,7 @@ app.use(fileUpload({
 }));
 app.use(cookieParser());
 app.use(cors({
-    origin: 'http://localhost:4200',
+    origin : "*",
     credentials : true
 }));
 
