@@ -122,6 +122,7 @@ const removeFromCart = async (req, res) => {
 
     res.status(200).send({
       message: "Item removed from cart successfully!",
+      cartItemsLength : cart.cartItems.length,
       success : true
     });
 
@@ -157,6 +158,7 @@ const getCart = async (req, res) => {
     }
 
     cart.cartItems = filteredCart;
+    await cart.save();
 
     res.status(200).send({
       cartItemsLength: filteredCart.length,

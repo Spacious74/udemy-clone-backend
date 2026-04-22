@@ -22,7 +22,7 @@ app.use(fileUpload({
 }));
 app.use(cookieParser());
 app.use(cors({
-    origin : "*",
+    origin : "http://localhost:4200",
     credentials : true
 }));
 
@@ -33,6 +33,7 @@ app.use(
   "/certificates",
   express.static(path.join(process.cwd(), "public", "certificates"))
 );
+
 
 app.use(allRoutes);
 
