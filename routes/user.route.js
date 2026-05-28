@@ -1,7 +1,6 @@
 const express = require('express');
 const userRouter = express.Router();
 const controller = require("../controllers/user.controller");
-const upload = require('../config/multerConfig');
 const { verifyToken, verifyTokenEncoded } = require('../middlewares/authMiddleware');
 
 
@@ -21,6 +20,10 @@ userRouter.post("/register", controller.createUser);
 // Login user 
 userRouter.post('/login', controller.loginUser);
 
+// Google Auth
+userRouter.post('/google/signup', controller.googleSignup);
+userRouter.post('/google/login', controller.googleLogin);
+
 //Get User Details by token verification
 userRouter.get('/getUserLogonData', verifyToken, controller.getSessionLogonData);
 
@@ -29,5 +32,3 @@ userRouter.post('/logout', controller.logoutUser);
 
 // exporting this route to allRoutes.js
 module.exports = userRouter;
-
-

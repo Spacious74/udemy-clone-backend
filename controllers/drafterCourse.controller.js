@@ -7,74 +7,68 @@ const QueAns = require("../models/QueAns");
 const cloudinary = require('cloudinary').v2;
 
 const getAllCourses = async (req, res) => {
-
-    const page = req.query.page;
+  try {
+    const page = Number(req.query.page) || 1;
     const limit = 10;
-    const skip = (page) * limit;
-    const min = Number(req.query.min);
-    const max = Number(req.query.max);
-    const sortedOrder = req.query.sortOrder;
-    const category = req.query.category;
+    const skip = (page - 1) * limit;
 
-    const language = req.query.language;
-    const level = req.query.level;
-    const searchText = req.query.searchText;
+    const { sortOrder, category, language, level, searchText, priceType } = req.query;
 
-    try {
-        let query = {};
-        
+    let query = {
+      isReleased: true
+    };
 
-        if (searchText) {
-            query.$or = [
-                { title: { $regex: searchText, $options: "i" } },
-                { description: { $regex: searchText, $options: "i" } },
-                { category: { $regex: searchText, $options: "i" } },
-            ];
-        }
-
-        if (category) query.category = category;
-        if (language) query.language = language;
-        if (level) query.level = level;
-
-        if (min && max) {
-            query.price = { $gte: min, $lte: max };
-        } else if (min) {
-            query.price = { $gte: min };
-        } else if (max) {
-            query.price = { $lte: max };
-        }
-
-        query.isReleased = true; // Only fetch released courses
-        totalResults = await DraftedCourse.find(query);
-
-        let filteredResults = await DraftedCourse.find(query).skip(skip).limit(limit);
-        if (sortedOrder == "lth") {
-            filteredResults = await DraftedCourse.find(query).sort({ price: 1 }).skip(skip).limit(limit);
-        } else if (sortedOrder == "htl") {
-            filteredResults = await DraftedCourse.find(query).sort({ price: -1 }).skip(skip).limit(limit);
-        } else if (sortedOrder == "") {
-            filteredResults = await DraftedCourse.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit);
-        }
-
-        if (filteredResults.length < 1) {
-            res.status(400).send({
-                message: "Course not found in database",
-                success: false
-            }); return;
-        }
-        res.status(200).send({
-            totalCourses: totalResults.length || 0,
-            data: filteredResults,
-            success: true
-        });
-
-    } catch (e) {
-        res.status(500).send({
-            message: "Some internal error occurred !",
-            error: e.message,
-            success: false
-        });
+    // Search
+    if (searchText) {
+      query.$or = [
+        { title: { $regex: searchText, $options: "i" } },
+        { description: { $regex: searchText, $options: "i" } },
+        { category: { $regex: searchText, $options: "i" } },
+      ];
     }
+
+    // Filters
+    if (category) query.category = category;
+    if (language) query.language = language;
+    if (level) query.level = level;
+
+    // Price filter (FREE / PAID)
+    if (priceType === "free") {
+      query.price = 0;
+    } else if (priceType === "paid") {
+      query.price = { $gt: 0 };
+    }
+
+    // Sorting
+    let sort = { createdAt: -1 }; // default latest
+
+    if (sortOrder === "lth") sort = { price: 1 };
+    else if (sortOrder === "htl") sort = { price: -1 };
+
+    // Parallel DB calls
+    const [totalCourses, courses] = await Promise.all([
+      DraftedCourse.countDocuments(query),
+      DraftedCourse.find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+    ]);
+
+    res.status(200).send({
+      success: true,
+      totalCourses,
+      currentPage: page,
+      totalPages: Math.ceil(totalCourses / limit),
+      data: courses
+    });
+
+  } catch (e) {
+    res.status(500).send({
+      message: "Some internal error occurred!",
+      error: e.message,
+      success: false
+    });
+  }
 };
 
 const getCourseDetails = async (req, res) => {

@@ -1,6 +1,8 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cloudinary = require('cloudinary').v2;
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Models
 const Cart = require("../models/Cart");
@@ -326,6 +328,106 @@ const getUserCourseEnrolled = async (req, res) => {
 
 }
 
+const googleSignup = async (req, res) => {
+  const { token } = req.body;
+  if (!token) {
+    return res.status(400).send({ message: "Token is required!", success: false });
+  }
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID, 
+    });
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).send({
+        message: "User already registered with this email! Please login.",
+        success: false
+      });
+    }
+
+    const generatedPassword = Math.random().toString(36).slice(-8); // Random password for google users
+    const userCreated = await User.create({
+      username: name,
+      email: email,
+      password: bcrypt.hashSync(generatedPassword, 10),
+      profileImage: picture || '',
+      isActive: true
+    });
+
+    // Assigning a cart for the user.
+    await Cart.create({
+      userId: userCreated._id,
+    });
+
+    const jwtToken = jwt.sign(
+      { uid: userCreated._id, email: userCreated.email, role: userCreated.role }, process.env.SECRET_KEY, { expiresIn: "1d" }
+    );
+
+    res.status(201).send({
+      data: userCreated,
+      message: "User registered successfully via Google!",
+      success: true,
+      token: jwtToken,
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      message: "Google Signup failed!",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const googleLogin = async (req, res) => {
+  const { token } = req.body;
+  if (!token) {
+    return res.status(400).send({ message: "Token is required!", success: false });
+  }
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID, 
+    });
+    const payload = ticket.getPayload();
+    const { email } = payload;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).send({
+        message: "User not found! Please sign up first.",
+        success: false
+      });
+    }
+
+    const jwtToken = jwt.sign(
+      { uid: user._id, email: user.email, role: user.role },
+      process.env.SECRET_KEY,
+      { expiresIn: "1d" }
+    );
+
+    return res.status(200).send({
+      data: user,
+      message: "User Logged in successfully via Google!",
+      success: true,
+      token: jwtToken,
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      message: "Google Login failed!",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getUserById,
   createUser,
@@ -335,5 +437,7 @@ module.exports = {
   getSessionLogonData,
   uploadImageToCloudinary,
   deleteUploadedImage,
-  getUserCourseEnrolled
+  getUserCourseEnrolled,
+  googleSignup,
+  googleLogin
 };
