@@ -10,7 +10,7 @@ userRouter.get('/profile/:userId', verifyToken, controller.getUserById);
 // Getting user's Courses Enrolled
 userRouter.get('/get-user-courses-enrolled', verifyToken, controller.getUserCourseEnrolled);
 
-userRouter.post('/update', controller.updateUserInfo);
+userRouter.post('/update', verifyToken, controller.updateUserInfo);
 userRouter.post('/upload', verifyToken, controller.uploadImageToCloudinary);
 userRouter.delete('/deleteImage', verifyToken, controller.deleteUploadedImage);
 

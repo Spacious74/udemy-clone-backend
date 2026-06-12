@@ -74,7 +74,7 @@ const uploadImageToCloudinary = async (req, res) => {
     if (user.profileImage != '') {
       const publicId = user.profileImage.split('/').pop().split('.')[0];
       const deleteResult = await deleteImageFromCloudinary(publicId);
-      if (deleteResult.success) {
+      if (deleteResult.success || (deleteResult.result && deleteResult.result.result === 'not found')) {
         user.profileImage = "";
         await user.save();
       } else {
