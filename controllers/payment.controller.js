@@ -7,6 +7,8 @@ const Cart = require('../models/Cart');
 const DraftedCourse = require('../models/DraftedCourse');
 const UserProgress = require('../models/UserProgress');
 const CourseModule = require('../models/CourseModules');
+const CourseAnalyticsDetail = require('../models/CourseAnalyticsDetail');
+
 
 const razorpayInstance = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -156,6 +158,23 @@ const singlePaymentVerification = async (req, res) => {
             course.totalStudentsPurchased += 1;
             await course.save();
 
+            // Course Analytics Detail
+            let analytics = await CourseAnalyticsDetail.findOne({ courseId });
+            if (!analytics) {
+                await CourseAnalyticsDetail.create({
+                    courseId,
+                    teacherId: course.educator.edId,
+                    studentsEnrolled: [{ studentId: userId, enrolledAt: new Date() }],
+                    earnings: course.price || 0
+                });
+            } else {
+                if (!analytics.studentsEnrolled.some(s => s.studentId.toString() === userId.toString())) {
+                    analytics.studentsEnrolled.push({ studentId: userId, enrolledAt: new Date() });
+                    analytics.earnings += (course.price || 0);
+                    await analytics.save();
+                }
+            }
+
             // Now adding first videos data to the user progress's current Watching video because by default it's always first video
             let existingProgress = await UserProgress.findOne({ userId, courseId });
             if (!existingProgress) {
@@ -250,6 +269,26 @@ const cartPaymentVerification = async (req, res) => {
             { _id: { $in: newCourseIds } },
             { $inc: { totalStudentsPurchased: 1 } }
         );
+
+        // 6.5️⃣ Update Analytics Detail
+        const coursesData = await DraftedCourse.find({ _id: { $in: newCourseIds } });
+        for (const c of coursesData) {
+            let analytics = await CourseAnalyticsDetail.findOne({ courseId: c._id });
+            if (!analytics) {
+                await CourseAnalyticsDetail.create({
+                    courseId: c._id,
+                    teacherId: c.educator.edId,
+                    studentsEnrolled: [{ studentId: userId, enrolledAt: new Date() }],
+                    earnings: c.price || 0
+                });
+            } else {
+                if (!analytics.studentsEnrolled.some(s => s.studentId.toString() === userId.toString())) {
+                    analytics.studentsEnrolled.push({ studentId: userId, enrolledAt: new Date() });
+                    analytics.earnings += (c.price || 0);
+                    await analytics.save();
+                }
+            }
+        }
 
         // 7️⃣ Create UserProgress safely (per course)
         for (const courseId of newCourseIds) {

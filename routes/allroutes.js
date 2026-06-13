@@ -11,6 +11,8 @@ const paymentRouter = require("./payment.route");
 const progressRouter = require('./userProgress.route');
 const certificateRouter = require('./certificate.route');
 const categoryRouter = require('./courseCategory.route');
+const courseAnalyticsRouter = require('./courseAnalytics.route');
+
 
 // Using all imported routes through a single route called allRoutes and exporting it to index.js
 allRoutes.use('/skillup/api/v1/draftedCourse',draftedCourseRouter)
@@ -22,6 +24,8 @@ allRoutes.use('/skillup/api/v1/payment', paymentRouter);
 allRoutes.use('/skillup/api/v1/user-progress', progressRouter);
 allRoutes.use('/skillup/api/v1/certificate', certificateRouter);
 allRoutes.use('/skillup/api/v1/category', categoryRouter);
+allRoutes.use('/skillup/api/v1/analytics', courseAnalyticsRouter);
+
 
 // Base API route
 allRoutes.use("/skillup/api/v1", (req,res)=>{
