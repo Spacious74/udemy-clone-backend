@@ -5,6 +5,7 @@ const CourseModule = require("../models/CourseModules");
 const Review = require("../models/Review");
 const QueAns = require("../models/QueAns");
 const cloudinary = require('cloudinary').v2;
+const User = require('../models/User');
 
 const getAllCourses = async (req, res) => {
   try {
@@ -465,6 +466,35 @@ const deleteCourse = async (req, res) => {
 
 }
 
+const getEnrolledStudents = async (req, res) => {
+    const courseId = req.query.courseId;
+    const educatorId = req.query.educatorId;
+
+    try {
+        const course = await DraftedCourse.findOne({ _id: courseId, "educator.edId": educatorId });
+        if (!course) {
+            return res.status(404).send({
+                message: "Course not found or you are not authorized to view its students.",
+                success: false
+            });
+        }
+
+        const students = await User.find({ coursesEnrolled: courseId }).select('username email profileImage role createdAt');
+        
+        return res.status(200).send({
+            success: true,
+            message: "Enrolled students fetched successfully.",
+            data: students
+        });
+    } catch (error) {
+        return res.status(500).send({
+            message: "Some internal error occurred",
+            error: error.message,
+            success: false
+        });
+    }
+}
+
 module.exports = {
     getAllCourses,
     getAllCoursesByEdId,
@@ -479,5 +509,6 @@ module.exports = {
     unpublishCourse,
     getReleaseCourseByEdId,
     getCourseAndPlaylist,
-    deleteCourse
+    deleteCourse,
+    getEnrolledStudents
 }

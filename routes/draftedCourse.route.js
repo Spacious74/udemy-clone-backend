@@ -16,6 +16,7 @@ draftedCourseRouter.get('/courseById', controller.getOneCourseById);
 draftedCourseRouter.get('/getCourseAndPlaylist', controller.getCourseAndPlaylist);
 
 draftedCourseRouter.get('/getByCourseAndEducatorId', verifyToken, authorizeRoles('teacher', 'admin'), controller.getCourseByEdIdAndCourseId);
+draftedCourseRouter.get('/enrolled-students', verifyToken, authorizeRoles('teacher', 'admin'), controller.getEnrolledStudents);
 draftedCourseRouter.post('/create', verifyToken, authorizeRoles('teacher', 'admin'), controller.createCourse);
 draftedCourseRouter.post('/update', verifyToken, authorizeRoles('teacher', 'admin'), controller.updateCourse);
 draftedCourseRouter.post('/upload-thumbnail', verifyToken, authorizeRoles('teacher', 'admin'), controller.uploadThumbnail);
