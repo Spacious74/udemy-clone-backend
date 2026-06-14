@@ -1,4 +1,5 @@
 const CourseAnalyticsDetail = require('../models/CourseAnalyticsDetail');
+const DraftedCourse = require('../models/DraftedCourse');
 
 const getTeacherAnalytics = async (req, res) => {
     try {
@@ -10,10 +11,15 @@ const getTeacherAnalytics = async (req, res) => {
             });
         }
 
-        const analytics = await CourseAnalyticsDetail.find({ teacherId }).populate('studentsEnrolled.studentId', 'username email role profileImage createdAt');
+        const courses = await DraftedCourse.find({ "educator.edId": teacherId });
+
+        const analytics = await CourseAnalyticsDetail.find({ teacherId })
+            .populate('courseId')
+            .populate('studentsEnrolled.studentId', 'username email role profileImage createdAt');
 
         res.status(200).send({
             success: true,
+            courses: courses,
             data: analytics,
             message: "Analytics fetched successfully"
         });
