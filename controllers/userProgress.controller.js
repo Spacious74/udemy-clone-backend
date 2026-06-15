@@ -86,6 +86,23 @@ const getUserProgress = async (req, res) => {
     }
 }
 
+const getAllCourseProgress = async (req, res) => {
+    try {
+        const { courseId } = req.query;
+        const allProgress = await UserProgress.find({ courseId }).populate('userId', 'username email profileImage role');
+        res.status(200).json({
+            success: true,
+            progressData: allProgress,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+}
+
 const updateProgress = async (req, res) => {
     try {
 
@@ -255,5 +272,6 @@ module.exports = {
     createUserProgress,
     updateProgress,
     getVideoDirectly,
-    markVideoComplete
+    markVideoComplete,
+    getAllCourseProgress
 }

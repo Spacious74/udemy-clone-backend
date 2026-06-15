@@ -3,6 +3,7 @@ const progressRouter = express.Router();
 const controller = require('../controllers/userProgress.controller');
 
 progressRouter.get('/', controller.getUserProgress);
+progressRouter.get('/courseProgress', controller.getAllCourseProgress);
 progressRouter.get('/getVideoDirectly', controller.getVideoDirectly);
 progressRouter.get('/markVideoCompleted', controller.markVideoComplete);
 
