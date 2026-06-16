@@ -164,12 +164,12 @@ const singlePaymentVerification = async (req, res) => {
                 await CourseAnalyticsDetail.create({
                     courseId,
                     teacherId: course.educator.edId,
-                    studentsEnrolled: [{ studentId: userId, enrolledAt: new Date() }],
+                    studentsEnrolled: [{ studentId: userId, pricePaid: course.price || 0, enrolledAt: new Date() }],
                     earnings: course.price || 0
                 });
             } else {
                 if (!analytics.studentsEnrolled.some(s => s.studentId.toString() === userId.toString())) {
-                    analytics.studentsEnrolled.push({ studentId: userId, enrolledAt: new Date() });
+                    analytics.studentsEnrolled.push({ studentId: userId, pricePaid: course.price || 0, enrolledAt: new Date() });
                     analytics.earnings += (course.price || 0);
                     await analytics.save();
                 }
@@ -278,12 +278,12 @@ const cartPaymentVerification = async (req, res) => {
                 await CourseAnalyticsDetail.create({
                     courseId: c._id,
                     teacherId: c.educator.edId,
-                    studentsEnrolled: [{ studentId: userId, enrolledAt: new Date() }],
+                    studentsEnrolled: [{ studentId: userId, pricePaid: c.price || 0, enrolledAt: new Date() }],
                     earnings: c.price || 0
                 });
             } else {
                 if (!analytics.studentsEnrolled.some(s => s.studentId.toString() === userId.toString())) {
-                    analytics.studentsEnrolled.push({ studentId: userId, enrolledAt: new Date() });
+                    analytics.studentsEnrolled.push({ studentId: userId, pricePaid: c.price || 0, enrolledAt: new Date() });
                     analytics.earnings += (c.price || 0);
                     await analytics.save();
                 }

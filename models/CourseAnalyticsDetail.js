@@ -16,6 +16,10 @@ const courseAnalyticsDetailSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
         },
+        pricePaid: {
+            type: Number,
+            default: 0
+        },
         enrolledAt: {
             type: Date,
             default: Date.now
