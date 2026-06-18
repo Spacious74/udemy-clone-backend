@@ -101,7 +101,17 @@ const userSchema = new mongoose.Schema({
     bookmarkedCourses: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Course'
-    }]
+    }],
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationToken: {
+        type: String
+    },
+    verificationTokenExpiry: {
+        type: Date
+    }
 
 }, {
     timestamps: true  // Automatically adds createdAt and updatedAt fields

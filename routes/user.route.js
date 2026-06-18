@@ -30,5 +30,9 @@ userRouter.get('/getUserLogonData', verifyToken, controller.getSessionLogonData)
 // Logout user
 userRouter.post('/logout', controller.logoutUser);
 
+// Email Verification
+userRouter.get('/verify-email', controller.verifyEmail);
+userRouter.post('/resend-verification', controller.resendVerification);
+
 // exporting this route to allRoutes.js
 module.exports = userRouter;

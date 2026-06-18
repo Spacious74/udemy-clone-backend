@@ -3,6 +3,9 @@ const jwt = require("jsonwebtoken");
 const cloudinary = require('cloudinary').v2;
 const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const crypto = require('crypto');
+const { sendEmail } = require('../utils/mailService');
+const { generateEmailVerificationTemplate } = require('../templates/emailVerificationTemplate');
 
 // Models
 const Cart = require("../models/Cart");
@@ -171,10 +174,17 @@ const createUser = async (req, res) => {
       return;
     }
 
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     const userCreated = await User.create({
       username: req.body.username,
       email: req.body.email,
-      password: bcrypt.hashSync(req.body.password, 10)
+      password: bcrypt.hashSync(req.body.password, 10),
+      isVerified: false,
+      verificationToken: hashedToken,
+      verificationTokenExpiry: tokenExpiry
     });
 
     // Assigning a cart for the user.
@@ -182,15 +192,13 @@ const createUser = async (req, res) => {
       userId: userCreated._id,
     });
 
-    const token = jwt.sign(
-      { uid: userCreated._id, email: userCreated.email, role : userCreated.role }, process.env.SECRET_KEY, { expiresIn: "1d" }
-    );
+    const htmlTemplate = generateEmailVerificationTemplate(verificationToken);
+    await sendEmail(userCreated.email, 'Verify your email address - SkillUp', htmlTemplate);
 
     res.status(201).send({
       data: userCreated,
-      message: "User registered successfully!",
+      message: "Registration successful! Please check your email to verify your account.",
       success: true,
-      token,
     });
 
   } catch (error) {
@@ -246,6 +254,13 @@ const loginUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).send({
         message: "User not found! Please create your account.",
+      });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).send({
+        message: "Please verify your email before logging in.",
+        success: false,
       });
     }
 
@@ -356,7 +371,8 @@ const googleSignup = async (req, res) => {
       email: email,
       password: bcrypt.hashSync(generatedPassword, 10),
       profileImage: picture || '',
-      isActive: true
+      isActive: true,
+      isVerified: true
     });
 
     // Assigning a cart for the user.
@@ -428,6 +444,89 @@ const googleLogin = async (req, res) => {
   }
 };
 
+const verifyEmail = async (req, res) => {
+  const { token } = req.query;
+
+  if (!token) {
+    return res.status(400).send({ message: "Invalid or missing token.", success: false });
+  }
+
+  try {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await User.findOne({
+      verificationToken: hashedToken,
+      verificationTokenExpiry: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).send({
+        message: "Token is invalid or has expired.",
+        success: false
+      });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpiry = undefined;
+    await user.save();
+
+    res.status(200).send({
+      message: "Email verified successfully! You can now log in.",
+      success: true
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error during verification.",
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+const resendVerification = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).send({ message: "Email is required.", success: false });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).send({ message: "User not found.", success: false });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).send({ message: "User is already verified.", success: false });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    user.verificationToken = hashedToken;
+    user.verificationTokenExpiry = tokenExpiry;
+    await user.save();
+
+    const htmlTemplate = generateEmailVerificationTemplate(verificationToken);
+    await sendEmail(user.email, 'Verify your email address - SkillUp', htmlTemplate);
+
+    res.status(200).send({
+      message: "Verification email sent successfully.",
+      success: true
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error while resending verification email.",
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getUserById,
   createUser,
@@ -439,5 +538,7 @@ module.exports = {
   deleteUploadedImage,
   getUserCourseEnrolled,
   googleSignup,
-  googleLogin
+  googleLogin,
+  verifyEmail,
+  resendVerification
 };
