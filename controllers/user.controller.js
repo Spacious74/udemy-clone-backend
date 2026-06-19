@@ -6,6 +6,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const crypto = require('crypto');
 const { sendEmail } = require('../utils/mailService');
 const { generateEmailVerificationTemplate } = require('../templates/emailVerificationTemplate');
+const { generateForgotPasswordTemplate } = require('../templates/forgotPasswordTemplate');
 
 // Models
 const Cart = require("../models/Cart");
@@ -527,6 +528,90 @@ const resendVerification = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).send({ message: "Email is required.", success: false });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Return 200 even if user not found to prevent email enumeration attacks
+      return res.status(200).send({
+        message: "If your email is registered, you will receive a reset link.",
+        success: true
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const tokenExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = tokenExpiry;
+    await user.save();
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+    
+    const htmlTemplate = generateForgotPasswordTemplate(resetUrl, user.username);
+    await sendEmail(user.email, 'Reset your SkillUp password', htmlTemplate);
+
+    res.status(200).send({
+      message: "If your email is registered, you will receive a reset link.",
+      success: true
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error while processing password reset request.",
+      success: false,
+      error: error.message
+    });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).send({ message: "Token and new password are required.", success: false });
+  }
+
+  try {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).send({
+        message: "Reset token is invalid or has expired.",
+        success: false
+      });
+    }
+
+    user.password = bcrypt.hashSync(newPassword, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).send({
+      message: "Password has been successfully reset. You can now log in.",
+      success: true
+    });
+
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal server error while resetting password.",
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getUserById,
   createUser,
@@ -540,5 +625,7 @@ module.exports = {
   googleSignup,
   googleLogin,
   verifyEmail,
-  resendVerification
+  resendVerification,
+  forgotPassword,
+  resetPassword
 };

@@ -34,5 +34,9 @@ userRouter.post('/logout', controller.logoutUser);
 userRouter.get('/verify-email', controller.verifyEmail);
 userRouter.post('/resend-verification', controller.resendVerification);
 
+// Forgot and Reset Password
+userRouter.post('/forgot-password', controller.forgotPassword);
+userRouter.post('/reset-password/:token', controller.resetPassword);
+
 // exporting this route to allRoutes.js
 module.exports = userRouter;
