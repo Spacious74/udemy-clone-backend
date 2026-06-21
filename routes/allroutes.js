@@ -13,6 +13,7 @@ const certificateRouter = require('./certificate.route');
 const categoryRouter = require('./courseCategory.route');
 const courseAnalyticsRouter = require('./courseAnalytics.route');
 const earningsRouter = require('./earnings.route');
+const aiRouter = require('./ai.routes');
 
 
 // Using all imported routes through a single route called allRoutes and exporting it to index.js
@@ -27,6 +28,7 @@ allRoutes.use('/skillup/api/v1/certificate', certificateRouter);
 allRoutes.use('/skillup/api/v1/category', categoryRouter);
 allRoutes.use('/skillup/api/v1/analytics', courseAnalyticsRouter);
 allRoutes.use('/skillup/api/v1/earnings', earningsRouter);
+allRoutes.use('/skillup/api/v1/ai', aiRouter);
 
 
 // Base API route
