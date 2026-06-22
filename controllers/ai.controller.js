@@ -69,7 +69,7 @@ User Profile Information:
         // General Mode
         const generalSystemPrompt = `You are SkillUp AI Tutor.
 ${userProfileInfo}
-CRITICAL INSTRUCTION: Limit your response to 4 or 5 short sentences. Be highly concise, direct, and to the point. Do not use conversational filler, lists, or elaborate unless absolutely necessary.`;
+CRITICAL INSTRUCTION: Keep your responses extremely short and to the point. Answer in 1 or 2 sentences maximum. Do not provide large explanations or use lists. Be highly concise.`;
         const responseText = await generateChatResponse(message, generalSystemPrompt);
         return res.status(200).json({ success: true, response: responseText });
     }
