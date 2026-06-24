@@ -15,17 +15,17 @@ const getTodayDateString = () => {
 const checkAndIncrementLimit = async (identifier, limit) => {
     const date = getTodayDateString();
     let record = await DailyAILimit.findOne({ identifier, date });
-    
+
     if (!record) {
         record = new DailyAILimit({ identifier, date, totalQuestions: 1 });
         await record.save();
         return true;
     }
-    
+
     if (record.totalQuestions >= limit) {
         return false;
     }
-    
+
     record.totalQuestions += 1;
     await record.save();
     return true;
@@ -33,14 +33,14 @@ const checkAndIncrementLimit = async (identifier, limit) => {
 
 exports.chat = catchAsyncError(async (req, res, next) => {
     const { message, courseId, isCourseMode } = req.body;
-    
+
     if (!message || message.length > 2000) {
         return res.status(400).json({ success: false, message: "Message is required and must be less than 2000 characters." });
     }
 
     const isGuest = !req.user;
     const identifier = isGuest ? req.ip : req.user.uid;
-    const limit = isGuest ? 5 : 1000;
+    const limit = isGuest ? 10 : 1000;
 
     const canProceed = await checkAndIncrementLimit(identifier, limit);
     if (!canProceed) {
@@ -52,25 +52,30 @@ exports.chat = catchAsyncError(async (req, res, next) => {
         const userDoc = await User.findById(req.user.uid).populate('coursesEnrolled', 'title');
         if (userDoc) {
             const enrolledCourses = userDoc.coursesEnrolled && userDoc.coursesEnrolled.length > 0
-                ? userDoc.coursesEnrolled.map(c => c.title).join(', ') 
+                ? userDoc.coursesEnrolled.map(c => c.title).join(', ')
                 : 'None';
-            
             userProfileInfo = `
-User Profile Information:
-- Username: ${userDoc.username || 'Student'}
-- Bio/Description: ${userDoc.headline || ''} ${userDoc.bio || ''}
-- Courses Enrolled: ${enrolledCourses}
-- Social Links: LinkedIn (${userDoc.socialLinks?.linkedin || 'None'}), GitHub (${userDoc.socialLinks?.github || 'None'}), Portfolio (${userDoc.socialLinks?.portfolio || 'None'})
-`;
+            --- LOGGED-IN USER PROFILE (use this to answer any personal questions) ---
+            Name: ${userDoc.username || 'Student'}
+            Headline: ${userDoc.headline || 'Not set'}
+            Bio: ${userDoc.bio || 'Not set'}
+            Courses Enrolled: ${enrolledCourses}
+            Social Links: LinkedIn (${userDoc.socialLinks?.linkedin || 'None'}), GitHub (${userDoc.socialLinks?.github || 'None'}), Portfolio (${userDoc.socialLinks?.portfolio || 'None'})
+            --- END USER PROFILE ---
+            `;
         }
     }
 
+    const maxTokens = 1400;
+
     if (!isCourseMode) {
         // General Mode
-        const generalSystemPrompt = `You are SkillUp AI Tutor.
-${userProfileInfo}
-CRITICAL INSTRUCTION: Keep your responses extremely short and to the point. Answer in 1 or 2 sentences maximum. Do not provide large explanations or use lists. Be highly concise.`;
-        const responseText = await generateChatResponse(message, generalSystemPrompt);
+        const generalSystemPrompt = `You are SkillUp AI Tutor, a concise educational assistant. ${userProfileInfo}
+        RULES:
+        1. If the user asks about their name, profile, headline, bio, enrolled courses, or any personal information, answer using the USER PROFILE above. For example, if they ask "what's my name?", reply with their Name from the profile.
+        2. Keep ALL responses under 300 words. Use 1-2 short paragraphs maximum. Never use bullet lists or numbered lists unless absolutely necessary.
+        3. Be direct, helpful, and conversational. No filler phrases like "Great question!" or "That's a wonderful query!".`;
+        const responseText = await generateChatResponse(message, generalSystemPrompt, [], maxTokens);
         return res.status(200).json({ success: true, response: responseText });
     }
 
@@ -79,13 +84,10 @@ CRITICAL INSTRUCTION: Keep your responses extremely short and to the point. Answ
         return res.status(400).json({ success: false, message: "courseId is required for course mode." });
     }
     if (isGuest) {
-         return res.status(401).json({ success: false, message: "You must be logged in to use course mode." });
+        return res.status(401).json({ success: false, message: "You must be logged in to use course mode." });
     }
 
-    let course = await Course.findById(courseId);
-    if (!course) {
-        course = await DraftedCourse.findById(courseId);
-    }
+    let course = await DraftedCourse.findById(courseId);
     if (!course) {
         return res.status(404).json({ success: false, message: "Course not found." });
     }
@@ -97,16 +99,17 @@ CRITICAL INSTRUCTION: Keep your responses extremely short and to the point. Answ
         progressStr = `Completed ${progress.videosCompleted.length} videos.`;
     }
 
-    const systemPrompt = `You are SkillUp AI Tutor.
-${userProfileInfo}
-The student is currently studying the following course: ${course.title}
-Course Description: ${course.description}
-Progress: ${progressStr}
+    const systemPrompt = `You are SkillUp AI Tutor, a concise educational assistant for a specific course.
+        ${userProfileInfo}
+        Current Course: ${course.title}
+        Course Description: ${course.description}
+        Student Progress: ${progressStr}
 
-Answer only questions related to this course.
-If the question is unrelated to the course, politely refuse and ask the student to ask course related questions only. 
-Do not expose private user information. 
-CRITICAL INSTRUCTION: Limit your response to 1 or 2 short sentences. Be highly concise, direct, and to the point. Do not use conversational filler, lists, or elaborate unless absolutely necessary.`;
+        RULES:
+        1. If the user asks about their name, profile, headline, bio, enrolled courses, or any personal information, answer using the USER PROFILE above.
+        2. Answer only questions related to this course. If unrelated, politely redirect.
+        3. Keep ALL responses under 300 words. Use 1-2 short paragraphs maximum. No bullet lists or numbered lists unless absolutely necessary.
+        4. Be direct and helpful. No filler phrases.`;
 
     // Fetch Chat History
     let chatDoc = await CourseChat.findOne({ userId: req.user.uid, courseId: courseId });
@@ -116,7 +119,7 @@ CRITICAL INSTRUCTION: Limit your response to 1 or 2 short sentences. Be highly c
         history = chatDoc.messages.slice(-10);
     }
 
-    const responseText = await generateChatResponse(message, systemPrompt, history);
+    const responseText = await generateChatResponse(message, systemPrompt, history, maxTokens);
 
     // Save to DB
     if (!chatDoc) {
@@ -136,7 +139,7 @@ CRITICAL INSTRUCTION: Limit your response to 1 or 2 short sentences. Be highly c
 
 exports.getCourseChat = catchAsyncError(async (req, res, next) => {
     const { courseId } = req.params;
-    
+
     if (!req.user) {
         return res.status(401).json({ success: false, message: "Authentication required." });
     }

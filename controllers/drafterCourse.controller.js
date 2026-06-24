@@ -3,7 +3,6 @@ const CustomErrorHandler = require("../utils/customErrorHandler");
 const catchAsyncError = require("../middlewares/catchAsyncError");
 const CourseModule = require("../models/CourseModules");
 const Review = require("../models/Review");
-const QueAns = require("../models/QueAns");
 const cloudinary = require('cloudinary').v2;
 const User = require('../models/User');
 
@@ -258,10 +257,6 @@ const createCourse = async (req, res, next) => {
         });
 
         await Review.create({
-            courseId: coursemade._id,
-        });
-
-        await QueAns.create({
             courseId: coursemade._id,
         });
 
