@@ -153,7 +153,7 @@ const addVideoToSection = async (req, res, next) => {
     try {
         const module = await CourseModule.findOne({ courseId: courseId });
         const sectionIndex = module.sectionArr.findIndex(section => section._id == sectionId);
-        module.sectionArr[sectionIndex].videos.push({ name: videoTitle });
+        module.sectionArr[sectionIndex].videos.push({ name: videoTitle, isFree: req.body.isFree || false });
         await module.save();
         await updateCourseLectureCount(courseId);
         res.status(200).send({
@@ -227,6 +227,9 @@ const updateVideoTitle = catchAsyncError(async (req, res, next) => {
         newName = module.sectionArr[sectionIndex].videos[videoIndex].name
     }
     module.sectionArr[sectionIndex].videos[videoIndex].name = newName;
+    if (req.body.isFree !== undefined) {
+        module.sectionArr[sectionIndex].videos[videoIndex].isFree = req.body.isFree;
+    }
 
     await module.save();
 

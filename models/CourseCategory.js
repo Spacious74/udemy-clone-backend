@@ -15,10 +15,19 @@ const courseCategorySchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    parentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "CourseCategory",
+        default: null
+    },
     createdAt: {
         type: Date,
         default: () => Date.now(),
         immutable: true
+    },
+    updatedAt: {
+        type: Date,
+        default: () => Date.now()
     }
 });
 

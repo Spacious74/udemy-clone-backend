@@ -12,7 +12,7 @@ const getAllCourses = async (req, res) => {
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const { sortOrder, category, language, level, searchText, priceType } = req.query;
+    const { sortOrder, subCategoryId, language, level, searchText, priceType } = req.query;
 
     let query = {
       isReleased: true
@@ -22,13 +22,12 @@ const getAllCourses = async (req, res) => {
     if (searchText) {
       query.$or = [
         { title: { $regex: searchText, $options: "i" } },
-        { description: { $regex: searchText, $options: "i" } },
-        { category: { $regex: searchText, $options: "i" } },
+        { description: { $regex: searchText, $options: "i" } }
       ];
     }
 
     // Filters
-    if (category) query.category = category;
+    if (subCategoryId) query.subCategoryId = subCategoryId;
     if (language) query.language = language;
     if (level) query.level = level;
 
@@ -234,10 +233,10 @@ const getCourseAndPlaylist = async (req, res) => {
 }
 
 const createCourse = async (req, res, next) => {
-    const { title, subTitle, description, category, subCategory,
+    const { title, subTitle, description, subCategoryId,
         price, language, level, educator, } = req.body;
 
-    if (!title || !description || !category || !educator || !price || !language || !level) {
+    if (!title || !description || !subCategoryId || !educator || !price || !language || !level) {
         res.status(500).send({
             message: "Missing required information!",
             error: "Error",
@@ -245,7 +244,7 @@ const createCourse = async (req, res, next) => {
     }
     try {
         const coursemade = await DraftedCourse.create({
-            title, subTitle, description, category, subCategory, price,
+            title, subTitle, description, subCategoryId, price,
             language, level, educator, coursePoster: {
                 public_id: "",
                 url: "",

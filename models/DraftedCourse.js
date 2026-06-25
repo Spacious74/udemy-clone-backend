@@ -18,11 +18,11 @@ const draftedCourseSchema = new mongoose.Schema({
     },  
     ratings : Number,
 
-    category : {
-        type : String,
-        reuqired : [true, "Category is required"]
+    subCategoryId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "CourseCategory",
+        required: [true, "Sub-category is required"]
     },
-    subCategory : String,
     price : Number,
     language : String,
     level : String,

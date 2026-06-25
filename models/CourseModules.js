@@ -12,6 +12,10 @@ const courseModuleSchema = new mongoose.Schema({
                 public_id : String,
                 url : String,
                 name : String,
+                isFree : {
+                    type: Boolean,
+                    default: false
+                }
             }]
         }
     ],
