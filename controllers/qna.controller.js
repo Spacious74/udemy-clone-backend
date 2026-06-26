@@ -1,6 +1,7 @@
 const Question = require('../models/Question');
 const Answer = require('../models/Answer');
-const Course = require('../models/Course');
+const DraftedCourse = require('../models/DraftedCourse')
+const CourseModule = require('../models/CourseModules');
 const catchAsyncError = require('../middlewares/catchAsyncError');
 
 exports.createQuestion = catchAsyncError(async (req, res) => {
@@ -28,7 +29,7 @@ exports.createAnswer = catchAsyncError(async (req, res) => {
     }
 
     let isInstructorAnswer = false;
-    const course = await Course.findById(question.courseId);
+    const course = await DraftedCourse.findById(question.courseId);
     if (course && course.educator.edId.toString() === userId.toString()) {
         isInstructorAnswer = true;
     }
@@ -71,6 +72,54 @@ exports.getQuestionsForLecture = catchAsyncError(async (req, res) => {
     });
 });
 
+exports.getQuestionsForCourse = catchAsyncError(async (req, res) => {
+    const { courseId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const totalQuestions = await Question.countDocuments({ courseId });
+    const questions = await Question.find({ courseId })
+        .populate('userId', 'username profileImage')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(); // Use lean to easily attach lectureInfo
+
+    // Attach lecture info by finding the course modules
+    const courseModule = await CourseModule.findOne({ courseId });
+    if (courseModule) {
+        const lectureMap = {};
+        courseModule.sectionArr.forEach((section, sIndex) => {
+            section.videos.forEach((video, vIndex) => {
+                lectureMap[video._id.toString()] = {
+                    sectionName: section.sectionName,
+                    sectionNo: sIndex + 1,
+                    lectureName: video.name,
+                    lectureNo: vIndex + 1
+                };
+            });
+        });
+
+        questions.forEach(q => {
+            if (q.lectureId && lectureMap[q.lectureId.toString()]) {
+                q.lectureInfo = lectureMap[q.lectureId.toString()];
+            }
+        });
+    }
+
+    res.status(200).json({ 
+        success: true, 
+        data: questions,
+        pagination: {
+            totalQuestions,
+            currentPage: page,
+            totalPages: Math.ceil(totalQuestions / limit),
+            limit
+        }
+    });
+});
+
 exports.getQuestionDetails = catchAsyncError(async (req, res) => {
     const { questionId } = req.params;
     const question = await Question.findById(questionId)
@@ -90,7 +139,7 @@ exports.getQuestionDetails = catchAsyncError(async (req, res) => {
 exports.getTeacherCoursesWithQuestions = catchAsyncError(async (req, res) => {
     const userId = req.user.uid;
 
-    const courses = await Course.find({ "educator.edId": userId }).select('_id title coursePoster totalStudentsPurchased');
+    const courses = await DraftedCourse.find({ "educator.edId": userId }).select('_id title coursePoster totalStudentsPurchased');
     
     const courseIds = courses.map(c => c._id);
     const questions = await Question.find({ courseId: { $in: courseIds } })
@@ -103,7 +152,7 @@ exports.getTeacherCoursesWithQuestions = catchAsyncError(async (req, res) => {
 
 exports.getTeacherQnaAnalytics = catchAsyncError(async (req, res) => {
     const userId = req.user.uid;
-    const courses = await Course.find({ "educator.edId": userId });
+    const courses = await DraftedCourse.find({ "educator.edId": userId });
     const courseIds = courses.map(c => c._id);
 
     const totalQuestions = await Question.countDocuments({ courseId: { $in: courseIds } });
