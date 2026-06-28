@@ -14,7 +14,7 @@ const paymentSchema = new mongoose.Schema({
     paymentStatus: String, // 'created' | 'paid' | 'failed'
     paymentMethod: String,
     courses: [
-        { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }
+        { type: mongoose.Schema.Types.ObjectId, ref: 'DraftedCourse' }
     ],
     receipt: String,
     createdAt: {

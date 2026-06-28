@@ -12,9 +12,12 @@ router.get('/dashboard-stats', adminController.getDashboardStats);
 
 // Users
 router.get('/users', adminController.getUsers);
+router.get('/users/:id/details', adminController.getUserDetails);
+router.put('/users/:id/role', adminController.updateUserRole);
 
 // Courses
 router.get('/courses', adminController.getCourses);
+router.get('/courses/:id/details', adminController.getCourseDetails);
 router.delete('/courses/:id', adminController.deleteCourse);
 
 // Categories

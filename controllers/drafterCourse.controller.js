@@ -5,6 +5,7 @@ const CourseModule = require("../models/CourseModules");
 const Review = require("../models/Review");
 const cloudinary = require('cloudinary').v2;
 const User = require('../models/User');
+const CourseCategory = require('../models/CourseCategory');
 
 const getAllCourses = async (req, res) => {
   try {
@@ -12,7 +13,7 @@ const getAllCourses = async (req, res) => {
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const { sortOrder, subCategoryId, language, level, searchText, priceType } = req.query;
+    const { sortOrder, subCategoryId, categoryName, language, level, searchText, priceType } = req.query;
 
     let query = {
       isReleased: true
@@ -26,8 +27,18 @@ const getAllCourses = async (req, res) => {
       ];
     }
 
-    // Filters
-    if (subCategoryId) query.subCategoryId = subCategoryId;
+    // Category Filter by Name or ID
+    if (categoryName) {
+      const category = await CourseCategory.findOne({ name: categoryName });
+      if (category) {
+        query.subCategoryId = category._id;
+      } else {
+        // If category not found, return empty results by matching an invalid ID or just a dummy condition
+        query.subCategoryId = null;
+      }
+    } else if (subCategoryId) {
+      query.subCategoryId = subCategoryId;
+    }
     if (language) query.language = language;
     if (level) query.level = level;
 
@@ -66,6 +77,33 @@ const getAllCourses = async (req, res) => {
       message: "Some internal error occurred!",
       error: e.message,
       success: false
+    });
+  }
+};
+
+const getSearchSuggestions = async (req, res) => {
+  try {
+    const q = req.query.q;
+    if (!q) {
+      return res.status(200).send({ success: true, data: [] });
+    }
+
+    const suggestions = await DraftedCourse.find(
+      { isReleased: true, title: { $regex: q, $options: "i" } },
+      '_id title'
+    )
+    .limit(8)
+    .lean();
+
+    res.status(200).send({
+      success: true,
+      data: suggestions
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error fetching suggestions",
+      error: error.message
     });
   }
 };
@@ -504,5 +542,6 @@ module.exports = {
     getReleaseCourseByEdId,
     getCourseAndPlaylist,
     deleteCourse,
-    getEnrolledStudents
+    getEnrolledStudents,
+    getSearchSuggestions
 }

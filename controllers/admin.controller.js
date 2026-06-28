@@ -3,7 +3,11 @@ const Course = require('../models/Course');
 const DraftedCourse = require('../models/DraftedCourse');
 const Payment = require('../models/Payment');
 const CourseCategory = require('../models/CourseCategory');
-
+const Certificate = require('../models/Certificate');
+const CourseAnalyticsDetail = require('../models/CourseAnalyticsDetail');
+const Review = require('../models/Review');
+const CourseModule = require('../models/CourseModules');
+const Question = require('../models/Question');
 // Dashboard Stats
 const getDashboardStats = async (req, res) => {
     try {
@@ -13,10 +17,16 @@ const getDashboardStats = async (req, res) => {
         
         let totalRevenue = 0;
         let totalEnrollments = 0;
+        const monthlyRevenue = new Array(12).fill(0);
         
         successfulPayments.forEach(p => {
             totalRevenue += (p.amount || 0);
             totalEnrollments += (p.courses ? p.courses.length : 0);
+            
+            if (p.createdAt) {
+                const month = new Date(p.createdAt).getMonth();
+                monthlyRevenue[month] += (p.amount || 0);
+            }
         });
 
         const recentUsers = await User.find().sort({ createdAt: -1 }).limit(5).select('-password');
@@ -30,7 +40,8 @@ const getDashboardStats = async (req, res) => {
                 totalRevenue,
                 totalEnrollments,
                 recentUsers,
-                recentPayments
+                recentPayments,
+                monthlyRevenue
             }
         });
     } catch (error) {
@@ -74,6 +85,77 @@ const getUsers = async (req, res) => {
     }
 };
 
+const updateUserRole = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+        
+        if (!['admin', 'teacher', 'student'].includes(role)) {
+            return res.status(400).json({ success: false, message: "Invalid role" });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(id, { role }, { new: true }).select('-password');
+        
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.status(200).json({ success: true, message: "User role updated successfully", data: updatedUser });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error updating user role", error: error.message });
+    }
+};
+
+const getUserDetails = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id)
+            .select('-password')
+            .populate('coursesEnrolled', 'title coursePoster price language level')
+            .populate('certifications.courseId', 'title');
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const purchasedCourses = user.coursesEnrolled || [];
+        const certificates = user.certifications || [];
+
+        let teacherData = null;
+        if (user.role === 'teacher') {
+            // Fetch created courses
+            const createdCourses = await DraftedCourse.find({ 'educator.edId': id }).populate('subCategoryId', 'name');
+            
+            // Fetch analytics
+            const analytics = await CourseAnalyticsDetail.find({ teacherId: id }).populate('courseId', 'title');
+            
+            // Fetch reviews
+            const courseIds = createdCourses.map(c => c._id);
+            const reviews = await Review.find({ courseId: { $in: courseIds } }).populate('courseId', 'title');
+
+            teacherData = {
+                createdCourses,
+                analytics,
+                reviews
+            };
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                profile: user,
+                purchasedCourses,
+                certificates,
+                teacherData
+            }
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error fetching user details", error: error.message });
+    }
+};
+
+
 // Courses
 const getCourses = async (req, res) => {
     try {
@@ -111,6 +193,42 @@ const getCourses = async (req, res) => {
          });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error fetching courses", error: error.message });
+    }
+};
+
+const getCourseDetails = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const course = await DraftedCourse.findById(id).populate('educator.edId', 'username email').populate('subCategoryId', 'name');
+        
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Course not found' });
+        }
+
+        // Fetch enrolled users
+        const enrolledUsers = await User.find({ coursesEnrolled: id }).select('username email createdAt isActive');
+
+        // Fetch lectures/modules
+        const courseModules = await CourseModule.findOne({ courseId: id });
+
+        // Fetch reviews
+        const reviewData = await Review.findOne({ courseId: id }).populate('reviewArr.userId', 'username');
+
+        // Fetch QnA
+        const qna = await Question.find({ courseId: id }).populate('userId', 'username email').sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: {
+                course,
+                enrolledUsers,
+                modules: courseModules ? courseModules.sectionArr : [],
+                reviews: reviewData ? reviewData.reviewArr : [],
+                qna
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error fetching course details", error: error.message });
     }
 };
 
@@ -195,7 +313,10 @@ const getTransactions = async (req, res) => {
 module.exports = {
     getDashboardStats,
     getUsers,
+    updateUserRole,
+    getUserDetails,
     getCourses,
+    getCourseDetails,
     deleteCourse,
     getCategories,
     addCategory,

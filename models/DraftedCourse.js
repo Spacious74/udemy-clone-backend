@@ -8,6 +8,7 @@ const draftedCourseSchema = new mongoose.Schema({
         required : [true, "Course title is required"],
         minLength : [8, "Title must be at least 8 characters long"],
         maxLength : [100, "Title can be more than 100 characters"],
+        index: true
     }, 
     subTitle : String,
 

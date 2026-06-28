@@ -151,3 +151,16 @@ exports.getCourseChat = catchAsyncError(async (req, res, next) => {
 
     return res.status(200).json({ success: true, messages: chatDoc.messages });
 });
+
+exports.getDailyLimit = catchAsyncError(async (req, res, next) => {
+    const isGuest = !req.user;
+    const identifier = isGuest ? req.ip : req.user.uid;
+    const limit = isGuest ? 10 : 1000;
+    const date = getTodayDateString();
+
+    const record = await DailyAILimit.findOne({ identifier, date });
+    const totalQuestions = record ? record.totalQuestions : 0;
+    const remaining = Math.max(0, limit - totalQuestions);
+
+    return res.status(200).json({ success: true, limit, totalQuestions, remaining });
+});

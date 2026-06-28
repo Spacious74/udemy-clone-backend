@@ -11,6 +11,7 @@ draftedCourseRouter.get('/', verifyToken, authorizeRoles('teacher', 'admin'), co
 draftedCourseRouter.get('/released', verifyToken, authorizeRoles('teacher', 'admin'), controller.getReleaseCourseByEdId);
 
 draftedCourseRouter.get('/getAllCourses', controller.getAllCourses);
+draftedCourseRouter.get('/search/suggestions', controller.getSearchSuggestions);
 draftedCourseRouter.get('/getCourseDetailsById', controller.getCourseDetails);
 draftedCourseRouter.get('/courseById', controller.getOneCourseById);
 draftedCourseRouter.get('/getCourseAndPlaylist', controller.getCourseAndPlaylist);
