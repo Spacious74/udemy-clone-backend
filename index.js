@@ -22,7 +22,7 @@ app.use(fileUpload({
 }));
 app.use(cookieParser());
 app.use(cors({
-    origin : "http://localhost:4200",
+    origin : process.env.FRONTEND_URL || "http://localhost:4200",
     credentials : true
 }));
 
@@ -39,6 +39,10 @@ app.use(allRoutes);
 
 
 // Running server using listen method
-app.listen(PORT, ()=>{
-    console.log("Server is listening on port : " + PORT);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, ()=>{
+        console.log("Server is listening on port : " + PORT);
+    });
+}
+
+module.exports = app;
