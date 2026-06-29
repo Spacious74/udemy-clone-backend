@@ -22,11 +22,10 @@ app.use(fileUpload({
 }));
 app.use(cookieParser());
 app.use(cors({
-    origin: [
-        "http://localhost:4200",
-        "https://skill-up-v1.vercel.app/"
-    ],
-    credentials : true
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // importing all routes
