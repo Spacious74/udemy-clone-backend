@@ -22,7 +22,10 @@ app.use(fileUpload({
 }));
 app.use(cookieParser());
 app.use(cors({
-    origin : process.env.FRONTEND_URL || "http://localhost:4200",
+    origin: [
+        "http://localhost:4200",
+        "https://skill-up-v1.vercel.app/"
+    ],
     credentials : true
 }));
 
