@@ -22,10 +22,10 @@ app.use(fileUpload({
 }));
 app.use(cookieParser());
 app.use(cors({
-    origin: process.env.CLIENT_URL,
+    origin: [process.env.CLIENT_URL, "http://localhost:4200"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    allowedHeaders: ["Content-Type", "Authorization", "AUTH_TOKEN", "credentials", "Cache-Control", "Pragma", "Expires"]
 }));
 
 // importing all routes

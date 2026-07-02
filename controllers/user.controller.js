@@ -39,25 +39,40 @@ const getUserById = async (req, res) => {
 
 const updateUserInfo = async (req, res) => {
   const userData = req.body;
+  const userId = req.user.uid;
   
   try {
-    const user = await User.findOne({ _id: userData.userId });
+    const user = await User.findById(userId);
     if (!user) {
       res.status(404).send({
         message: "User not found",
         success: false,
       }); return;
     }
-    const updatedUser = await User.findByIdAndUpdate(userData.userId, userData, {
+
+    // Prevent IDOR: use token's userId, ignore body's userId
+    delete userData.userId;
+
+    const updatedUser = await User.findByIdAndUpdate(userId, userData, {
       new: true, runValidators: true
     });
 
-    await DraftedCourse.updateMany({ "educator.edId": userData.userId }, { $set: { "educator.edname": updatedUser.username } });
+    await DraftedCourse.updateMany({ "educator.edId": userId }, { $set: { "educator.edname": updatedUser.username } });
+
+    let token = undefined;
+    if (userData.role && userData.role !== user.role) {
+      token = jwt.sign(
+        { uid: updatedUser._id, email: updatedUser.email, role: updatedUser.role },
+        process.env.SECRET_KEY,
+        { expiresIn: "1d" }
+      );
+    }
 
     res.status(200).send({
       data: updatedUser,
       message: "User info. updated successfully!",
       success: true,
+      ...(token && { token })
     });
 
   } catch (error) {
