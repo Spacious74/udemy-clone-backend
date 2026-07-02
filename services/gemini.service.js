@@ -30,7 +30,7 @@ const generateChatResponse = async (message, systemPrompt = null, history = [], 
             contents: params.contents,
             systemInstruction: params.systemInstruction,
             config: {
-                maxOutputTokens: maxTokens,
+             
                 temperature: 0.7
             }
         });

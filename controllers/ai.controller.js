@@ -108,8 +108,10 @@ exports.chat = catchAsyncError(async (req, res, next) => {
         RULES:
         1. If the user asks about their name, profile, headline, bio, enrolled courses, or any personal information, answer using the USER PROFILE above.
         2. Answer only questions related to this course. If unrelated, politely redirect.
-        3. Keep ALL responses under 300 words. Use 1-2 short paragraphs maximum. No bullet lists or numbered lists unless absolutely necessary.
-        4. Be direct and helpful. No filler phrases.`;
+        3. No bullet lists or numbered lists unless absolutely necessary.
+        4. Be direct and helpful. No filler phrases.
+        Note:- Keep ALL responses under 300 words. Use 1-2 short paragraphs maximum. 
+        `;
 
     // Fetch Chat History
     let chatDoc = await CourseChat.findOne({ userId: req.user.uid, courseId: courseId });
