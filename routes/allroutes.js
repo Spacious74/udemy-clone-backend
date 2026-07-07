@@ -16,6 +16,7 @@ const earningsRouter = require('./earnings.route');
 const aiRouter = require('./ai.routes');
 const qnaRouter = require('./qna.route');
 const adminRouter = require('./admin.route');
+const blogRouter = require('./blog.route');
 
 
 // Using all imported routes through a single route called allRoutes and exporting it to index.js
@@ -33,6 +34,7 @@ allRoutes.use('/skillup/api/v1/earnings', earningsRouter);
 allRoutes.use('/skillup/api/v1/ai', aiRouter);
 allRoutes.use('/skillup/api/v1/qna', qnaRouter);
 allRoutes.use('/skillup/api/v1/admin', adminRouter);
+allRoutes.use('/skillup/api/v1/blog', blogRouter);
 
 
 // Base API route
