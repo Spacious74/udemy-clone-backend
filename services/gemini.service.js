@@ -23,15 +23,16 @@ const generateChatResponse = async (message, systemPrompt = null, history = [], 
             };
         }
 
-        console.log("AI service called : ",params);
-
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: params.contents,
-            systemInstruction: params.systemInstruction,
             config: {
-             
-                temperature: 0.7
+                systemInstruction: params.systemInstruction,
+                temperature: 0.7,
+                maxOutputTokens: maxTokens,
+                thinkingConfig: {
+                    thinkingBudget: 100
+                }
             }
         });
 

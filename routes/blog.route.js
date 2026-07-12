@@ -29,4 +29,32 @@ router.put(
   blogController.toggleVisibility
 );
 
+router.put(
+  "/:id",
+  verifyToken,
+  authorizeRoles("admin"),
+  blogController.updateBlog
+);
+
+router.post(
+  "/upload-cover",
+  verifyToken,
+  authorizeRoles("admin"),
+  blogController.uploadBlogCover
+);
+
+router.delete(
+  "/delete-cover",
+  verifyToken,
+  authorizeRoles("admin"),
+  blogController.deleteBlogCover
+);
+
+router.put(
+  "/update-cover",
+  verifyToken,
+  authorizeRoles("admin"),
+  blogController.updateBlogCover
+);
+
 module.exports = router;

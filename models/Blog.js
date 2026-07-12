@@ -16,8 +16,8 @@ const blogSchema = new mongoose.Schema(
       required: true,
     },
     coverImage: {
-      type: String, // URL of the uploaded image
-      default: "",
+      url: { type: String, default: "" },
+      public_id: { type: String, default: "" },
     },
     tags: [
       {
