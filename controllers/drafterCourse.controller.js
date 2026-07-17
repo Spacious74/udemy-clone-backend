@@ -27,17 +27,22 @@ const getAllCourses = async (req, res) => {
       ];
     }
 
-    // Category Filter by Name or ID
-    if (categoryName) {
+    // Category Filter by ID or Name
+    if (subCategoryId) {
+      query.subCategoryId = subCategoryId;
+    } else if (req.query.parentCategoryId) {
+      query.categoryId = req.query.parentCategoryId;
+    } else if (categoryName) {
       const category = await CourseCategory.findOne({ name: categoryName });
       if (category) {
-        query.subCategoryId = category._id;
+        if (!category.parentId) {
+          query.categoryId = category._id;
+        } else {
+          query.subCategoryId = category._id;
+        }
       } else {
-        // If category not found, return empty results by matching an invalid ID or just a dummy condition
         query.subCategoryId = null;
       }
-    } else if (subCategoryId) {
-      query.subCategoryId = subCategoryId;
     }
     if (language) query.language = language;
     if (level) query.level = level;
@@ -281,8 +286,11 @@ const createCourse = async (req, res, next) => {
         });
     }
     try {
+        const subCategoryInfo = await CourseCategory.findById(subCategoryId);
+        const categoryId = subCategoryInfo && subCategoryInfo.parentId ? subCategoryInfo.parentId : (subCategoryInfo ? subCategoryInfo._id : null);
+
         const coursemade = await DraftedCourse.create({
-            title, subTitle, description, subCategoryId, price,
+            title, subTitle, description, subCategoryId, categoryId, price,
             language, level, educator, coursePoster: {
                 public_id: "",
                 url: "",
@@ -473,12 +481,17 @@ const deleteCourse = async (req, res) => {
             await CourseModule.deleteOne({ courseId: courseId });
         }
 
-        const deleteResult = await deleteImageFromCloudinary(course.coursePoster.public_id.split('/')[1]);
-        if (!deleteResult.success) {
-            return res.status(500).send({
-                message: "Failed to delete course thumbnail from cloud.",
-                success: false,
-            });
+        if (course.coursePoster && course.coursePoster.public_id) {
+            const publicId = course.coursePoster.public_id.split('/')[1];
+            if (publicId) {
+                const deleteResult = await deleteImageFromCloudinary(publicId);
+                if (!deleteResult.success) {
+                    return res.status(500).send({
+                        message: "Failed to delete course thumbnail from cloud.",
+                        success: false,
+                    });
+                }
+            }
         }
 
         await DraftedCourse.deleteOne({ _id: courseId });

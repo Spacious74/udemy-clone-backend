@@ -19,6 +19,10 @@ const draftedCourseSchema = new mongoose.Schema({
     },  
     ratings : Number,
 
+    categoryId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "CourseCategory",
+    },
     subCategoryId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "CourseCategory",
